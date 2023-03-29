@@ -1,10 +1,12 @@
 package schema
 
 import (
-	"lkuoch/ent-todo/ent/schema/enums"
 	"lkuoch/ent-todo/ent/schema/mixins"
 
+	"entgo.io/contrib/entgql"
+
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -32,8 +34,21 @@ func (Todo) Fields() []ent.Field {
 
 		field.
 			Enum("priority").
-			GoType(enums.TodoPriority("")).
-			Default(string(enums.None)),
+			NamedValues(
+				"High", "HIGH",
+				"Medium", "MEDIUM",
+				"Low", "LOW",
+				"None", "NONE",
+			).
+			Default("NONE"),
+
+		field.
+			Enum("status").
+			NamedValues(
+				"InProgress", "IN_PROGRESS",
+				"Completed", "COMPLETED",
+			).
+			Default("IN_PROGRESS"),
 
 		field.
 			Time("time_completed").
@@ -45,7 +60,19 @@ func (Todo) Fields() []ent.Field {
 // Edges of the Todo.
 func (Todo) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.To("parent", Todo.Type).
+			Unique().
+			From("children"),
+
 		edge.From("user", User.Type).
 			Ref("todos"),
+	}
+}
+
+// Annotations of the Todo.
+func (Todo) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entgql.QueryField(),
+		entgql.Mutations(entgql.MutationCreate()),
 	}
 }

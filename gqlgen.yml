@@ -1,0 +1,25 @@
+schema:
+  - schema.graphql
+
+exec:
+  layout: follow-schema
+  dir: ent/graph
+  package: graph
+
+model:
+  filename: ent/graph/models/models_gen.go
+  package: graph_model
+
+resolver:
+  layout: follow-schema
+  dir: ent/graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
