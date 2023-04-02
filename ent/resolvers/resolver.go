@@ -1,7 +1,8 @@
-package graph
+package todo
 
 import (
-	ent "entgo.io/ent/entc/integration/ent"
+	ent "lkuoch/ent-todo/ent/generated"
+	gql "lkuoch/ent-todo/ent/generated/gql"
 
 	"github.com/99designs/gqlgen/graphql"
 )
@@ -9,7 +10,7 @@ import (
 type Resolver struct{ client *ent.Client }
 
 func NewSchema(client *ent.Client) graphql.ExecutableSchema {
-	return NewExecutableSchema(Config{
+	return gql.NewExecutableSchema(gql.Config{
 		Resolvers: &Resolver{client},
 	})
 }

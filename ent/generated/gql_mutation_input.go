@@ -56,3 +56,33 @@ func (c *TodoCreate) SetInput(i CreateTodoInput) *TodoCreate {
 	i.Mutate(c.Mutation())
 	return c
 }
+
+// CreateUserInput represents a mutation input for creating users.
+type CreateUserInput struct {
+	CreatedAt   *time.Time
+	UpdatedAt   *time.Time
+	Username    string
+	DisplayName string
+	TodoIDs     []uuid.UUID
+}
+
+// Mutate applies the CreateUserInput on the UserMutation builder.
+func (i *CreateUserInput) Mutate(m *UserMutation) {
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	m.SetUsername(i.Username)
+	m.SetDisplayName(i.DisplayName)
+	if v := i.TodoIDs; len(v) > 0 {
+		m.AddTodoIDs(v...)
+	}
+}
+
+// SetInput applies the change-set in the CreateUserInput on the UserCreate builder.
+func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
+	i.Mutate(c.Mutation())
+	return c
+}

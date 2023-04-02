@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"lkuoch/ent-todo/ent/generated/migrate"
 	"log"
 	"net/http"
 
-	graph "lkuoch/ent-todo/ent/graph"
+	ent "lkuoch/ent-todo/ent/generated"
+	gql "lkuoch/ent-todo/ent/resolvers"
 
 	"entgo.io/ent/dialect"
-	"entgo.io/ent/entc/integration/ent"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 
@@ -24,13 +23,14 @@ func main() {
 	}
 	if err := client.Schema.Create(
 		context.Background(),
-		migrate.WithGlobalUniqueID(true),
+		// TODO(Fix this): Following line causes issue with SQLITE
+		// migrate.WithGlobalUniqueID(true),
 	); err != nil {
 		log.Fatal("opening ent client", err)
 	}
 
 	// Configure the server and start listening on :8081.
-	srv := handler.NewDefaultServer(graph.NewSchema(client))
+	srv := handler.NewDefaultServer(gql.NewSchema(client))
 	http.Handle("/",
 		playground.Handler("Todo", "/query"),
 	)

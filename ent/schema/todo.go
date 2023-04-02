@@ -4,7 +4,6 @@ import (
 	"lkuoch/ent-todo/ent/schema/mixins"
 
 	"entgo.io/contrib/entgql"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
