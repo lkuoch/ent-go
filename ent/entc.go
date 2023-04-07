@@ -13,7 +13,7 @@ import (
 func main() {
 	extension, err := entgql.NewExtension(
 		entgql.WithSchemaGenerator(),
-		entgql.WithSchemaPath("schema.graphql"),
+		entgql.WithSchemaPath("ent-schema.graphql"),
 		entgql.WithConfigPath("gqlgen.yml"),
 	)
 

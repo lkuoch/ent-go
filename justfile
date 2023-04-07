@@ -10,7 +10,7 @@ generate:
   go generate .
 
 regenerate:
-  rm -rf ./schema.graphql ./ent/generated ./ent/resolvers/*.resolvers.go && just generate
+  rm -rf ./ent-schema.graphql ./ent/generated ./ent/resolvers/*.resolvers.go && just generate
 
 run:
   go run service/ent-todo.go

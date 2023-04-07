@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"lkuoch/ent-todo/ent/generated"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -29,6 +30,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 	Todo() TodoResolver
 	User() UserResolver
@@ -40,6 +42,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Mutation struct {
+		CreateTodo func(childComplexity int, input generated.CreateTodoInput) int
+		CreateUser func(childComplexity int, input generated.CreateUserInput) int
+	}
+
 	PageInfo struct {
 		EndCursor       func(childComplexity int) int
 		HasNextPage     func(childComplexity int) int
@@ -91,6 +98,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Mutation.createTodo":
+		if e.complexity.Mutation.CreateTodo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTodo_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTodo(childComplexity, args["input"].(generated.CreateTodoInput)), true
+
+	case "Mutation.createUser":
+		if e.complexity.Mutation.CreateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(generated.CreateUserInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -299,6 +330,21 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				Data: buf.Bytes(),
 			}
 		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -325,7 +371,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../../schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+	{Name: "../../../ent-schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 """
 CreateTodoInput is used for create Todo object.
@@ -434,6 +480,14 @@ type User implements Node {
   username: String!
   displayName: String!
   todos: [Todo!]
+}
+`, BuiltIn: false},
+	{Name: "../../../typedef.graphql", Input: `# All custom graphql definitions go here
+# Types from ` + "`" + `generated.graphql` + "`" + ` are referenced here
+
+type Mutation {
+  createTodo(input: CreateTodoInput!): Todo
+  createUser(input: CreateUserInput!): User
 }
 `, BuiltIn: false},
 }

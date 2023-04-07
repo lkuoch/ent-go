@@ -23,22 +23,22 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []string) ([]generated.No
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*generated.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+	return r.client.Todo.Query().All(ctx)
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*generated.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	return r.client.User.Query().All(ctx)
 }
 
 // ID is the resolver for the id field.
 func (r *todoResolver) ID(ctx context.Context, obj *generated.Todo) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.String(), nil
 }
 
 // ID is the resolver for the id field.
 func (r *userResolver) ID(ctx context.Context, obj *generated.User) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return obj.ID.String(), nil
 }
 
 // ChildIDs is the resolver for the childIDs field.

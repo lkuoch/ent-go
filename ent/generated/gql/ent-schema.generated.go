@@ -1990,6 +1990,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNCreateTodoInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateTodoInput(ctx context.Context, v interface{}) (generated.CreateTodoInput, error) {
+	res, err := ec.unmarshalInputCreateTodoInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUserInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateUserInput(ctx context.Context, v interface{}) (generated.CreateUserInput, error) {
+	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNNode2ᚕlkuochᚋentᚑtodoᚋentᚋgeneratedᚐNoder(ctx context.Context, sel ast.SelectionSet, v []generated.Noder) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -2341,6 +2351,13 @@ func (ec *executionContext) marshalOUser2ᚕᚖlkuochᚋentᚑtodoᚋentᚋgener
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOUser2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐUser(ctx context.Context, sel ast.SelectionSet, v *generated.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

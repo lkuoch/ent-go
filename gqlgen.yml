@@ -1,5 +1,6 @@
 schema:
-  - schema.graphql
+  - ent-schema.graphql
+  - typedef.graphql
 
 exec:
   layout: follow-schema
@@ -8,6 +9,7 @@ exec:
 resolver:
   layout: follow-schema
   dir: ent/resolvers
+  filename_template: "{name}.go"
 
 autobind:
   - lkuoch/ent-todo/ent/generated

@@ -1,0 +1,2 @@
+schema: "./ent-schema.graphql"
+include: "./typedef.graphql"
