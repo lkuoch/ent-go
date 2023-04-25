@@ -12,7 +12,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // TodoCreate is the builder for creating a Todo entity.
@@ -99,28 +98,28 @@ func (tc *TodoCreate) SetNillableTimeCompleted(t *time.Time) *TodoCreate {
 }
 
 // SetID sets the "id" field.
-func (tc *TodoCreate) SetID(u uuid.UUID) *TodoCreate {
-	tc.mutation.SetID(u)
+func (tc *TodoCreate) SetID(s string) *TodoCreate {
+	tc.mutation.SetID(s)
 	return tc
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (tc *TodoCreate) SetNillableID(u *uuid.UUID) *TodoCreate {
-	if u != nil {
-		tc.SetID(*u)
+func (tc *TodoCreate) SetNillableID(s *string) *TodoCreate {
+	if s != nil {
+		tc.SetID(*s)
 	}
 	return tc
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tc *TodoCreate) AddChildIDs(ids ...uuid.UUID) *TodoCreate {
+func (tc *TodoCreate) AddChildIDs(ids ...string) *TodoCreate {
 	tc.mutation.AddChildIDs(ids...)
 	return tc
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tc *TodoCreate) AddChildren(t ...*Todo) *TodoCreate {
-	ids := make([]uuid.UUID, len(t))
+	ids := make([]string, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -128,13 +127,13 @@ func (tc *TodoCreate) AddChildren(t ...*Todo) *TodoCreate {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tc *TodoCreate) SetParentID(id uuid.UUID) *TodoCreate {
+func (tc *TodoCreate) SetParentID(id string) *TodoCreate {
 	tc.mutation.SetParentID(id)
 	return tc
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tc *TodoCreate) SetNillableParentID(id *uuid.UUID) *TodoCreate {
+func (tc *TodoCreate) SetNillableParentID(id *string) *TodoCreate {
 	if id != nil {
 		tc = tc.SetParentID(*id)
 	}
@@ -147,14 +146,14 @@ func (tc *TodoCreate) SetParent(t *Todo) *TodoCreate {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tc *TodoCreate) AddUserIDs(ids ...uuid.UUID) *TodoCreate {
+func (tc *TodoCreate) AddUserIDs(ids ...string) *TodoCreate {
 	tc.mutation.AddUserIDs(ids...)
 	return tc
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tc *TodoCreate) AddUser(u ...*User) *TodoCreate {
-	ids := make([]uuid.UUID, len(u))
+	ids := make([]string, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -213,7 +212,7 @@ func (tc *TodoCreate) defaults() {
 		tc.mutation.SetStatus(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
-		v := todo.DefaultID()
+		v := todo.DefaultID
 		tc.mutation.SetID(v)
 	}
 }
@@ -265,10 +264,10 @@ func (tc *TodoCreate) sqlSave(ctx context.Context) (*Todo, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Todo.ID type: %T", _spec.ID.Value)
 		}
 	}
 	tc.mutation.id = &_node.ID
@@ -279,11 +278,11 @@ func (tc *TodoCreate) sqlSave(ctx context.Context) (*Todo, error) {
 func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Todo{config: tc.config}
-		_spec = sqlgraph.NewCreateSpec(todo.Table, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(todo.Table, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString))
 	)
 	if id, ok := tc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(todo.FieldCreatedAt, field.TypeTime, value)
@@ -317,7 +316,7 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -333,7 +332,7 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 			Columns: []string{todo.ParentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -350,7 +349,7 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

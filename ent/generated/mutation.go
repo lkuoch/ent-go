@@ -14,7 +14,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 const (
@@ -35,7 +34,7 @@ type TodoMutation struct {
 	config
 	op              Op
 	typ             string
-	id              *uuid.UUID
+	id              *string
 	created_at      *time.Time
 	updated_at      *time.Time
 	title           *string
@@ -43,13 +42,13 @@ type TodoMutation struct {
 	status          *todo.Status
 	time_completed  *time.Time
 	clearedFields   map[string]struct{}
-	children        map[uuid.UUID]struct{}
-	removedchildren map[uuid.UUID]struct{}
+	children        map[string]struct{}
+	removedchildren map[string]struct{}
 	clearedchildren bool
-	parent          *uuid.UUID
+	parent          *string
 	clearedparent   bool
-	user            map[uuid.UUID]struct{}
-	removeduser     map[uuid.UUID]struct{}
+	user            map[string]struct{}
+	removeduser     map[string]struct{}
 	cleareduser     bool
 	done            bool
 	oldValue        func(context.Context) (*Todo, error)
@@ -76,7 +75,7 @@ func newTodoMutation(c config, op Op, opts ...todoOption) *TodoMutation {
 }
 
 // withTodoID sets the ID field of the mutation.
-func withTodoID(id uuid.UUID) todoOption {
+func withTodoID(id string) todoOption {
 	return func(m *TodoMutation) {
 		var (
 			err   error
@@ -128,13 +127,13 @@ func (m TodoMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Todo entities.
-func (m *TodoMutation) SetID(id uuid.UUID) {
+func (m *TodoMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *TodoMutation) ID() (id uuid.UUID, exists bool) {
+func (m *TodoMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -145,12 +144,12 @@ func (m *TodoMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *TodoMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *TodoMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -390,9 +389,9 @@ func (m *TodoMutation) ResetTimeCompleted() {
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by ids.
-func (m *TodoMutation) AddChildIDs(ids ...uuid.UUID) {
+func (m *TodoMutation) AddChildIDs(ids ...string) {
 	if m.children == nil {
-		m.children = make(map[uuid.UUID]struct{})
+		m.children = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.children[ids[i]] = struct{}{}
@@ -410,9 +409,9 @@ func (m *TodoMutation) ChildrenCleared() bool {
 }
 
 // RemoveChildIDs removes the "children" edge to the Todo entity by IDs.
-func (m *TodoMutation) RemoveChildIDs(ids ...uuid.UUID) {
+func (m *TodoMutation) RemoveChildIDs(ids ...string) {
 	if m.removedchildren == nil {
-		m.removedchildren = make(map[uuid.UUID]struct{})
+		m.removedchildren = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.children, ids[i])
@@ -421,7 +420,7 @@ func (m *TodoMutation) RemoveChildIDs(ids ...uuid.UUID) {
 }
 
 // RemovedChildren returns the removed IDs of the "children" edge to the Todo entity.
-func (m *TodoMutation) RemovedChildrenIDs() (ids []uuid.UUID) {
+func (m *TodoMutation) RemovedChildrenIDs() (ids []string) {
 	for id := range m.removedchildren {
 		ids = append(ids, id)
 	}
@@ -429,7 +428,7 @@ func (m *TodoMutation) RemovedChildrenIDs() (ids []uuid.UUID) {
 }
 
 // ChildrenIDs returns the "children" edge IDs in the mutation.
-func (m *TodoMutation) ChildrenIDs() (ids []uuid.UUID) {
+func (m *TodoMutation) ChildrenIDs() (ids []string) {
 	for id := range m.children {
 		ids = append(ids, id)
 	}
@@ -444,7 +443,7 @@ func (m *TodoMutation) ResetChildren() {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by id.
-func (m *TodoMutation) SetParentID(id uuid.UUID) {
+func (m *TodoMutation) SetParentID(id string) {
 	m.parent = &id
 }
 
@@ -459,7 +458,7 @@ func (m *TodoMutation) ParentCleared() bool {
 }
 
 // ParentID returns the "parent" edge ID in the mutation.
-func (m *TodoMutation) ParentID() (id uuid.UUID, exists bool) {
+func (m *TodoMutation) ParentID() (id string, exists bool) {
 	if m.parent != nil {
 		return *m.parent, true
 	}
@@ -469,7 +468,7 @@ func (m *TodoMutation) ParentID() (id uuid.UUID, exists bool) {
 // ParentIDs returns the "parent" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // ParentID instead. It exists only for internal usage by the builders.
-func (m *TodoMutation) ParentIDs() (ids []uuid.UUID) {
+func (m *TodoMutation) ParentIDs() (ids []string) {
 	if id := m.parent; id != nil {
 		ids = append(ids, *id)
 	}
@@ -483,9 +482,9 @@ func (m *TodoMutation) ResetParent() {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by ids.
-func (m *TodoMutation) AddUserIDs(ids ...uuid.UUID) {
+func (m *TodoMutation) AddUserIDs(ids ...string) {
 	if m.user == nil {
-		m.user = make(map[uuid.UUID]struct{})
+		m.user = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.user[ids[i]] = struct{}{}
@@ -503,9 +502,9 @@ func (m *TodoMutation) UserCleared() bool {
 }
 
 // RemoveUserIDs removes the "user" edge to the User entity by IDs.
-func (m *TodoMutation) RemoveUserIDs(ids ...uuid.UUID) {
+func (m *TodoMutation) RemoveUserIDs(ids ...string) {
 	if m.removeduser == nil {
-		m.removeduser = make(map[uuid.UUID]struct{})
+		m.removeduser = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.user, ids[i])
@@ -514,7 +513,7 @@ func (m *TodoMutation) RemoveUserIDs(ids ...uuid.UUID) {
 }
 
 // RemovedUser returns the removed IDs of the "user" edge to the User entity.
-func (m *TodoMutation) RemovedUserIDs() (ids []uuid.UUID) {
+func (m *TodoMutation) RemovedUserIDs() (ids []string) {
 	for id := range m.removeduser {
 		ids = append(ids, id)
 	}
@@ -522,7 +521,7 @@ func (m *TodoMutation) RemovedUserIDs() (ids []uuid.UUID) {
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
-func (m *TodoMutation) UserIDs() (ids []uuid.UUID) {
+func (m *TodoMutation) UserIDs() (ids []string) {
 	for id := range m.user {
 		ids = append(ids, id)
 	}
@@ -894,14 +893,14 @@ type UserMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
+	id            *string
 	created_at    *time.Time
 	updated_at    *time.Time
 	username      *string
 	display_name  *string
 	clearedFields map[string]struct{}
-	todos         map[uuid.UUID]struct{}
-	removedtodos  map[uuid.UUID]struct{}
+	todos         map[string]struct{}
+	removedtodos  map[string]struct{}
 	clearedtodos  bool
 	done          bool
 	oldValue      func(context.Context) (*User, error)
@@ -928,7 +927,7 @@ func newUserMutation(c config, op Op, opts ...userOption) *UserMutation {
 }
 
 // withUserID sets the ID field of the mutation.
-func withUserID(id uuid.UUID) userOption {
+func withUserID(id string) userOption {
 	return func(m *UserMutation) {
 		var (
 			err   error
@@ -980,13 +979,13 @@ func (m UserMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of User entities.
-func (m *UserMutation) SetID(id uuid.UUID) {
+func (m *UserMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserMutation) ID() (id uuid.UUID, exists bool) {
+func (m *UserMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -997,12 +996,12 @@ func (m *UserMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *UserMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1157,9 +1156,9 @@ func (m *UserMutation) ResetDisplayName() {
 }
 
 // AddTodoIDs adds the "todos" edge to the Todo entity by ids.
-func (m *UserMutation) AddTodoIDs(ids ...uuid.UUID) {
+func (m *UserMutation) AddTodoIDs(ids ...string) {
 	if m.todos == nil {
-		m.todos = make(map[uuid.UUID]struct{})
+		m.todos = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.todos[ids[i]] = struct{}{}
@@ -1177,9 +1176,9 @@ func (m *UserMutation) TodosCleared() bool {
 }
 
 // RemoveTodoIDs removes the "todos" edge to the Todo entity by IDs.
-func (m *UserMutation) RemoveTodoIDs(ids ...uuid.UUID) {
+func (m *UserMutation) RemoveTodoIDs(ids ...string) {
 	if m.removedtodos == nil {
-		m.removedtodos = make(map[uuid.UUID]struct{})
+		m.removedtodos = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.todos, ids[i])
@@ -1188,7 +1187,7 @@ func (m *UserMutation) RemoveTodoIDs(ids ...uuid.UUID) {
 }
 
 // RemovedTodos returns the removed IDs of the "todos" edge to the Todo entity.
-func (m *UserMutation) RemovedTodosIDs() (ids []uuid.UUID) {
+func (m *UserMutation) RemovedTodosIDs() (ids []string) {
 	for id := range m.removedtodos {
 		ids = append(ids, id)
 	}
@@ -1196,7 +1195,7 @@ func (m *UserMutation) RemovedTodosIDs() (ids []uuid.UUID) {
 }
 
 // TodosIDs returns the "todos" edge IDs in the mutation.
-func (m *UserMutation) TodosIDs() (ids []uuid.UUID) {
+func (m *UserMutation) TodosIDs() (ids []string) {
 	for id := range m.todos {
 		ids = append(ids, id)
 	}

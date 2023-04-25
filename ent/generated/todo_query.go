@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // TodoQuery is the builder for querying Todo entities.
@@ -158,8 +157,8 @@ func (tq *TodoQuery) FirstX(ctx context.Context) *Todo {
 
 // FirstID returns the first Todo ID from the query.
 // Returns a *NotFoundError when no Todo ID was found.
-func (tq *TodoQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (tq *TodoQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = tq.Limit(1).IDs(setContextOp(ctx, tq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -171,7 +170,7 @@ func (tq *TodoQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tq *TodoQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (tq *TodoQuery) FirstIDX(ctx context.Context) string {
 	id, err := tq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -209,8 +208,8 @@ func (tq *TodoQuery) OnlyX(ctx context.Context) *Todo {
 // OnlyID is like Only, but returns the only Todo ID in the query.
 // Returns a *NotSingularError when more than one Todo ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tq *TodoQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (tq *TodoQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = tq.Limit(2).IDs(setContextOp(ctx, tq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -226,7 +225,7 @@ func (tq *TodoQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tq *TodoQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (tq *TodoQuery) OnlyIDX(ctx context.Context) string {
 	id, err := tq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -254,7 +253,7 @@ func (tq *TodoQuery) AllX(ctx context.Context) []*Todo {
 }
 
 // IDs executes the query and returns a list of Todo IDs.
-func (tq *TodoQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (tq *TodoQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if tq.ctx.Unique == nil && tq.path != nil {
 		tq.Unique(true)
 	}
@@ -266,7 +265,7 @@ func (tq *TodoQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tq *TodoQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (tq *TodoQuery) IDsX(ctx context.Context) []string {
 	ids, err := tq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -524,7 +523,7 @@ func (tq *TodoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Todo, e
 
 func (tq *TodoQuery) loadChildren(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Todo)
+	nodeids := make(map[string]*Todo)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -554,8 +553,8 @@ func (tq *TodoQuery) loadChildren(ctx context.Context, query *TodoQuery, nodes [
 	return nil
 }
 func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Todo)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Todo)
 	for i := range nodes {
 		if nodes[i].todo_parent == nil {
 			continue
@@ -587,8 +586,8 @@ func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*
 }
 func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *User)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Todo)
-	nids := make(map[uuid.UUID]map[*Todo]struct{})
+	byID := make(map[string]*Todo)
+	nids := make(map[string]map[*Todo]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -617,11 +616,11 @@ func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*To
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Todo]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
@@ -660,7 +659,7 @@ func (tq *TodoQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (tq *TodoQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString))
 	_spec.From = tq.sql
 	if unique := tq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

@@ -32,10 +32,6 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
-	Todo() TodoResolver
-	User() UserResolver
-	CreateTodoInput() CreateTodoInputResolver
-	CreateUserInput() CreateUserInputResolver
 }
 
 type DirectiveRoot struct {
@@ -482,8 +478,8 @@ type User implements Node {
   todos: [Todo!]
 }
 `, BuiltIn: false},
-	{Name: "../../../typedef.graphql", Input: `# All custom graphql definitions go here
-# Types from ` + "`" + `generated.graphql` + "`" + ` are referenced here
+	{Name: "../../../typedef.graphql", Input: `# All custom graphql definitions go here.
+# Types from ` + "`" + `ent-schema.graphql` + "`" + ` are referenced here
 
 type Mutation {
   createTodo(input: CreateTodoInput!): Todo

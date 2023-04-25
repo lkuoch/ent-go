@@ -4,8 +4,6 @@ package user
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -69,5 +67,5 @@ var (
 	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
 	DisplayNameValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
+	DefaultID string
 )

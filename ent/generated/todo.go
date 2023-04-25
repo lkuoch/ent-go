@@ -9,14 +9,13 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 // Todo is the model entity for the Todo schema.
 type Todo struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -32,7 +31,7 @@ type Todo struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TodoQuery when eager-loading is set.
 	Edges       TodoEdges `json:"edges"`
-	todo_parent *uuid.UUID
+	todo_parent *string
 }
 
 // TodoEdges holds the relations/edges for other nodes in the graph.
@@ -89,14 +88,12 @@ func (*Todo) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case todo.FieldTitle, todo.FieldPriority, todo.FieldStatus:
+		case todo.FieldID, todo.FieldTitle, todo.FieldPriority, todo.FieldStatus:
 			values[i] = new(sql.NullString)
 		case todo.FieldCreatedAt, todo.FieldUpdatedAt, todo.FieldTimeCompleted:
 			values[i] = new(sql.NullTime)
-		case todo.FieldID:
-			values[i] = new(uuid.UUID)
 		case todo.ForeignKeys[0]: // todo_parent
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Todo", columns[i])
 		}
@@ -113,10 +110,10 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case todo.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				t.ID = *value
+			} else if value.Valid {
+				t.ID = value.String
 			}
 		case todo.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -156,11 +153,11 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 				*t.TimeCompleted = value.Time
 			}
 		case todo.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field todo_parent", values[i])
 			} else if value.Valid {
-				t.todo_parent = new(uuid.UUID)
-				*t.todo_parent = *value.S.(*uuid.UUID)
+				t.todo_parent = new(string)
+				*t.todo_parent = value.String
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 
-	"github.com/google/uuid"
+	ulid "github.com/oklog/ulid/v2"
 )
 
 type IdMixin struct {
@@ -15,8 +15,8 @@ type IdMixin struct {
 func (IdMixin) Fields() []ent.Field {
 	return []ent.Field{
 		field.
-			UUID("id", uuid.UUID{}).
+			String("id").
 			Immutable().
-			Default(uuid.New),
+			Default(ulid.Make().String()),
 	}
 }

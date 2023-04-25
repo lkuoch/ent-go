@@ -1,4 +1,4 @@
-package todo
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -31,53 +31,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*generated.User, error) {
 	return r.client.User.Query().All(ctx)
 }
 
-// ID is the resolver for the id field.
-func (r *todoResolver) ID(ctx context.Context, obj *generated.Todo) (string, error) {
-	return obj.ID.String(), nil
-}
-
-// ID is the resolver for the id field.
-func (r *userResolver) ID(ctx context.Context, obj *generated.User) (string, error) {
-	return obj.ID.String(), nil
-}
-
-// ChildIDs is the resolver for the childIDs field.
-func (r *createTodoInputResolver) ChildIDs(ctx context.Context, obj *generated.CreateTodoInput, data []string) error {
-	panic(fmt.Errorf("not implemented: ChildIDs - childIDs"))
-}
-
-// ParentID is the resolver for the parentID field.
-func (r *createTodoInputResolver) ParentID(ctx context.Context, obj *generated.CreateTodoInput, data *string) error {
-	panic(fmt.Errorf("not implemented: ParentID - parentID"))
-}
-
-// UserIDs is the resolver for the userIDs field.
-func (r *createTodoInputResolver) UserIDs(ctx context.Context, obj *generated.CreateTodoInput, data []string) error {
-	panic(fmt.Errorf("not implemented: UserIDs - userIDs"))
-}
-
-// TodoIDs is the resolver for the todoIDs field.
-func (r *createUserInputResolver) TodoIDs(ctx context.Context, obj *generated.CreateUserInput, data []string) error {
-	panic(fmt.Errorf("not implemented: TodoIDs - todoIDs"))
-}
-
 // Query returns gql.QueryResolver implementation.
 func (r *Resolver) Query() gql.QueryResolver { return &queryResolver{r} }
 
-// Todo returns gql.TodoResolver implementation.
-func (r *Resolver) Todo() gql.TodoResolver { return &todoResolver{r} }
-
-// User returns gql.UserResolver implementation.
-func (r *Resolver) User() gql.UserResolver { return &userResolver{r} }
-
-// CreateTodoInput returns gql.CreateTodoInputResolver implementation.
-func (r *Resolver) CreateTodoInput() gql.CreateTodoInputResolver { return &createTodoInputResolver{r} }
-
-// CreateUserInput returns gql.CreateUserInputResolver implementation.
-func (r *Resolver) CreateUserInput() gql.CreateUserInputResolver { return &createUserInputResolver{r} }
-
 type queryResolver struct{ *Resolver }
-type todoResolver struct{ *Resolver }
-type userResolver struct{ *Resolver }
-type createTodoInputResolver struct{ *Resolver }
-type createUserInputResolver struct{ *Resolver }

@@ -5,8 +5,6 @@ package generated
 import (
 	"lkuoch/ent-todo/ent/generated/todo"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // CreateTodoInput represents a mutation input for creating todos.
@@ -17,9 +15,9 @@ type CreateTodoInput struct {
 	Priority      *todo.Priority
 	Status        *todo.Status
 	TimeCompleted *time.Time
-	ChildIDs      []uuid.UUID
-	ParentID      *uuid.UUID
-	UserIDs       []uuid.UUID
+	ChildIDs      []string
+	ParentID      *string
+	UserIDs       []string
 }
 
 // Mutate applies the CreateTodoInput on the TodoMutation builder.
@@ -63,7 +61,7 @@ type CreateUserInput struct {
 	UpdatedAt   *time.Time
 	Username    string
 	DisplayName string
-	TodoIDs     []uuid.UUID
+	TodoIDs     []string
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.

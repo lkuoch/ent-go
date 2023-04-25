@@ -6,9 +6,9 @@ require (
 	entgo.io/contrib v0.3.6-0.20230324214626-bb1039b4b8fb
 	entgo.io/ent v0.11.10
 	github.com/99designs/gqlgen v0.17.27
-	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/vektah/gqlparser/v2 v2.5.1
 )
 
@@ -19,6 +19,7 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect

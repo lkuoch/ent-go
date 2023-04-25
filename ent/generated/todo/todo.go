@@ -7,8 +7,6 @@ import (
 	"io"
 	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -99,7 +97,7 @@ var (
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
+	DefaultID string
 )
 
 // Priority defines the type for the "priority" enum field.

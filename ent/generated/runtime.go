@@ -7,8 +7,6 @@ import (
 	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -53,7 +51,7 @@ func init() {
 	// todoDescID is the schema descriptor for id field.
 	todoDescID := todoMixinFields0[0].Descriptor()
 	// todo.DefaultID holds the default value on creation for the id field.
-	todo.DefaultID = todoDescID.Default.(func() uuid.UUID)
+	todo.DefaultID = todoDescID.Default.(string)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0
@@ -96,5 +94,5 @@ func init() {
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
-	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	user.DefaultID = userDescID.Default.(string)
 }

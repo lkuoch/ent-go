@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // TodoUpdate is the builder for updating Todo entities.
@@ -91,14 +90,14 @@ func (tu *TodoUpdate) ClearTimeCompleted() *TodoUpdate {
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tu *TodoUpdate) AddChildIDs(ids ...uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) AddChildIDs(ids ...string) *TodoUpdate {
 	tu.mutation.AddChildIDs(ids...)
 	return tu
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tu *TodoUpdate) AddChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]uuid.UUID, len(t))
+	ids := make([]string, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -106,13 +105,13 @@ func (tu *TodoUpdate) AddChildren(t ...*Todo) *TodoUpdate {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tu *TodoUpdate) SetParentID(id uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) SetParentID(id string) *TodoUpdate {
 	tu.mutation.SetParentID(id)
 	return tu
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tu *TodoUpdate) SetNillableParentID(id *uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) SetNillableParentID(id *string) *TodoUpdate {
 	if id != nil {
 		tu = tu.SetParentID(*id)
 	}
@@ -125,14 +124,14 @@ func (tu *TodoUpdate) SetParent(t *Todo) *TodoUpdate {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tu *TodoUpdate) AddUserIDs(ids ...uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) AddUserIDs(ids ...string) *TodoUpdate {
 	tu.mutation.AddUserIDs(ids...)
 	return tu
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tu *TodoUpdate) AddUser(u ...*User) *TodoUpdate {
-	ids := make([]uuid.UUID, len(u))
+	ids := make([]string, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -151,14 +150,14 @@ func (tu *TodoUpdate) ClearChildren() *TodoUpdate {
 }
 
 // RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tu *TodoUpdate) RemoveChildIDs(ids ...uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) RemoveChildIDs(ids ...string) *TodoUpdate {
 	tu.mutation.RemoveChildIDs(ids...)
 	return tu
 }
 
 // RemoveChildren removes "children" edges to Todo entities.
 func (tu *TodoUpdate) RemoveChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]uuid.UUID, len(t))
+	ids := make([]string, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -178,14 +177,14 @@ func (tu *TodoUpdate) ClearUser() *TodoUpdate {
 }
 
 // RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tu *TodoUpdate) RemoveUserIDs(ids ...uuid.UUID) *TodoUpdate {
+func (tu *TodoUpdate) RemoveUserIDs(ids ...string) *TodoUpdate {
 	tu.mutation.RemoveUserIDs(ids...)
 	return tu
 }
 
 // RemoveUser removes "user" edges to User entities.
 func (tu *TodoUpdate) RemoveUser(u ...*User) *TodoUpdate {
-	ids := make([]uuid.UUID, len(u))
+	ids := make([]string, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -252,7 +251,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := tu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString))
 	if ps := tu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -286,7 +285,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -299,7 +298,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -315,7 +314,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -331,7 +330,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{todo.ParentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -344,7 +343,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{todo.ParentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -360,7 +359,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -373,7 +372,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -389,7 +388,7 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -478,14 +477,14 @@ func (tuo *TodoUpdateOne) ClearTimeCompleted() *TodoUpdateOne {
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tuo *TodoUpdateOne) AddChildIDs(ids ...uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) AddChildIDs(ids ...string) *TodoUpdateOne {
 	tuo.mutation.AddChildIDs(ids...)
 	return tuo
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tuo *TodoUpdateOne) AddChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]uuid.UUID, len(t))
+	ids := make([]string, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -493,13 +492,13 @@ func (tuo *TodoUpdateOne) AddChildren(t ...*Todo) *TodoUpdateOne {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tuo *TodoUpdateOne) SetParentID(id uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) SetParentID(id string) *TodoUpdateOne {
 	tuo.mutation.SetParentID(id)
 	return tuo
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tuo *TodoUpdateOne) SetNillableParentID(id *uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) SetNillableParentID(id *string) *TodoUpdateOne {
 	if id != nil {
 		tuo = tuo.SetParentID(*id)
 	}
@@ -512,14 +511,14 @@ func (tuo *TodoUpdateOne) SetParent(t *Todo) *TodoUpdateOne {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tuo *TodoUpdateOne) AddUserIDs(ids ...uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) AddUserIDs(ids ...string) *TodoUpdateOne {
 	tuo.mutation.AddUserIDs(ids...)
 	return tuo
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tuo *TodoUpdateOne) AddUser(u ...*User) *TodoUpdateOne {
-	ids := make([]uuid.UUID, len(u))
+	ids := make([]string, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -538,14 +537,14 @@ func (tuo *TodoUpdateOne) ClearChildren() *TodoUpdateOne {
 }
 
 // RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tuo *TodoUpdateOne) RemoveChildIDs(ids ...uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) RemoveChildIDs(ids ...string) *TodoUpdateOne {
 	tuo.mutation.RemoveChildIDs(ids...)
 	return tuo
 }
 
 // RemoveChildren removes "children" edges to Todo entities.
 func (tuo *TodoUpdateOne) RemoveChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]uuid.UUID, len(t))
+	ids := make([]string, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -565,14 +564,14 @@ func (tuo *TodoUpdateOne) ClearUser() *TodoUpdateOne {
 }
 
 // RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tuo *TodoUpdateOne) RemoveUserIDs(ids ...uuid.UUID) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) RemoveUserIDs(ids ...string) *TodoUpdateOne {
 	tuo.mutation.RemoveUserIDs(ids...)
 	return tuo
 }
 
 // RemoveUser removes "user" edges to User entities.
 func (tuo *TodoUpdateOne) RemoveUser(u ...*User) *TodoUpdateOne {
-	ids := make([]uuid.UUID, len(u))
+	ids := make([]string, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -652,7 +651,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 	if err := tuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(todo.Table, todo.Columns, sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString))
 	id, ok := tuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`generated: missing "Todo.id" for update`)}
@@ -703,7 +702,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -716,7 +715,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -732,7 +731,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: []string{todo.ChildrenColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -748,7 +747,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: []string{todo.ParentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -761,7 +760,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: []string{todo.ParentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -777,7 +776,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -790,7 +789,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -806,7 +805,7 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 			Columns: todo.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

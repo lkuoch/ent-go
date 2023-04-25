@@ -1,4 +1,4 @@
-package todo
+package resolvers
 
 import (
 	ent "lkuoch/ent-todo/ent/generated"
