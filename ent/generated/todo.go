@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -30,8 +31,9 @@ type Todo struct {
 	TimeCompleted *time.Time `json:"time_completed,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TodoQuery when eager-loading is set.
-	Edges       TodoEdges `json:"edges"`
-	todo_parent *string
+	Edges        TodoEdges `json:"edges"`
+	todo_parent  *string
+	selectValues sql.SelectValues
 }
 
 // TodoEdges holds the relations/edges for other nodes in the graph.
@@ -95,7 +97,7 @@ func (*Todo) scanValues(columns []string) ([]any, error) {
 		case todo.ForeignKeys[0]: // todo_parent
 			values[i] = new(sql.NullString)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Todo", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -159,9 +161,17 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 				t.todo_parent = new(string)
 				*t.todo_parent = value.String
 			}
+		default:
+			t.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// Value returns the ent.Value that was dynamically selected and assigned to the Todo.
+// This includes values selected through modifiers, order, etc.
+func (t *Todo) Value(name string) (ent.Value, error) {
+	return t.selectValues.Get(name)
 }
 
 // QueryChildren queries the "children" edge of the Todo entity.

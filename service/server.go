@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	ent "lkuoch/ent-todo/ent/generated"
+	"lkuoch/ent-todo/ent/generated/migrate"
 	gql "lkuoch/ent-todo/ent/resolvers"
 
 	"entgo.io/ent/dialect"
@@ -17,14 +18,14 @@ import (
 
 func main() {
 	// Create ent.Client and run the schema migration.
-	client, err := ent.Open(dialect.SQLite, "file:ent?mode=memory&cache=shared&_fk=1")
+	client, err := ent.Open(dialect.SQLite, "test-db.db?_fk=1")
 	if err != nil {
 		log.Fatal("opening ent client", err)
 	}
+	defer client.Close()
 	if err := client.Schema.Create(
 		context.Background(),
-		// TODO(Fix this): Following line causes issue with SQLITE
-		// migrate.WithGlobalUniqueID(true),
+		migrate.WithGlobalUniqueID(true),
 	); err != nil {
 		log.Fatal("opening ent client", err)
 	}

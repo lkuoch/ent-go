@@ -8,6 +8,7 @@ import (
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
+	"entgo.io/ent/schema/field"
 )
 
 func main() {
@@ -26,8 +27,12 @@ func main() {
 	}
 
 	if err := entc.Generate("./ent/schema", &gen.Config{
-		Target:  "./ent/generated",
-		Package: "lkuoch/ent-todo/ent/generated",
+		Target:   "./ent/generated",
+		Package:  "lkuoch/ent-todo/ent/generated",
+		Features: []gen.Feature{gen.FeatureVersionedMigration},
+		IDType: &field.TypeInfo{
+			Type: field.TypeString,
+		},
 	}, options...); err != nil {
 		log.Fatalf("running ent codegen: %v", err)
 	}

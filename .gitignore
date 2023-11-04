@@ -5,6 +5,7 @@ ent-todo
 *.dll
 *.so
 *.dylib
+*.db
 
 # Test binary, built with `go test -c`
 *.test
