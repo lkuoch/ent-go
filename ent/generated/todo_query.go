@@ -9,6 +9,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/predicate"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
@@ -157,8 +158,8 @@ func (tq *TodoQuery) FirstX(ctx context.Context) *Todo {
 
 // FirstID returns the first Todo ID from the query.
 // Returns a *NotFoundError when no Todo ID was found.
-func (tq *TodoQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (tq *TodoQuery) FirstID(ctx context.Context) (id pulid.ID, err error) {
+	var ids []pulid.ID
 	if ids, err = tq.Limit(1).IDs(setContextOp(ctx, tq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -170,7 +171,7 @@ func (tq *TodoQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tq *TodoQuery) FirstIDX(ctx context.Context) string {
+func (tq *TodoQuery) FirstIDX(ctx context.Context) pulid.ID {
 	id, err := tq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -208,8 +209,8 @@ func (tq *TodoQuery) OnlyX(ctx context.Context) *Todo {
 // OnlyID is like Only, but returns the only Todo ID in the query.
 // Returns a *NotSingularError when more than one Todo ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tq *TodoQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (tq *TodoQuery) OnlyID(ctx context.Context) (id pulid.ID, err error) {
+	var ids []pulid.ID
 	if ids, err = tq.Limit(2).IDs(setContextOp(ctx, tq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -225,7 +226,7 @@ func (tq *TodoQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tq *TodoQuery) OnlyIDX(ctx context.Context) string {
+func (tq *TodoQuery) OnlyIDX(ctx context.Context) pulid.ID {
 	id, err := tq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -253,7 +254,7 @@ func (tq *TodoQuery) AllX(ctx context.Context) []*Todo {
 }
 
 // IDs executes the query and returns a list of Todo IDs.
-func (tq *TodoQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (tq *TodoQuery) IDs(ctx context.Context) (ids []pulid.ID, err error) {
 	if tq.ctx.Unique == nil && tq.path != nil {
 		tq.Unique(true)
 	}
@@ -265,7 +266,7 @@ func (tq *TodoQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tq *TodoQuery) IDsX(ctx context.Context) []string {
+func (tq *TodoQuery) IDsX(ctx context.Context) []pulid.ID {
 	ids, err := tq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -523,7 +524,7 @@ func (tq *TodoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Todo, e
 
 func (tq *TodoQuery) loadChildren(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*Todo)
+	nodeids := make(map[pulid.ID]*Todo)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -553,8 +554,8 @@ func (tq *TodoQuery) loadChildren(ctx context.Context, query *TodoQuery, nodes [
 	return nil
 }
 func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Todo)
+	ids := make([]pulid.ID, 0, len(nodes))
+	nodeids := make(map[pulid.ID][]*Todo)
 	for i := range nodes {
 		if nodes[i].todo_parent == nil {
 			continue
@@ -586,8 +587,8 @@ func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*
 }
 func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *User)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[string]*Todo)
-	nids := make(map[string]map[*Todo]struct{})
+	byID := make(map[pulid.ID]*Todo)
+	nids := make(map[pulid.ID]map[*Todo]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -616,11 +617,11 @@ func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*To
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(sql.NullString)}, values...), nil
+				return append([]any{new(pulid.ID)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := values[0].(*sql.NullString).String
-				inValue := values[1].(*sql.NullString).String
+				outValue := *values[0].(*pulid.ID)
+				inValue := *values[1].(*pulid.ID)
 				if nids[inValue] == nil {
 					nids[inValue] = map[*Todo]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])

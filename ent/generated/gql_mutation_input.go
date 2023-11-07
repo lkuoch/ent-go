@@ -4,6 +4,7 @@ package generated
 
 import (
 	"lkuoch/ent-todo/ent/generated/todo"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 )
 
@@ -15,9 +16,9 @@ type CreateTodoInput struct {
 	Priority      *todo.Priority
 	Status        *todo.Status
 	TimeCompleted *time.Time
-	ChildIDs      []string
-	ParentID      *string
-	UserIDs       []string
+	ChildIDs      []pulid.ID
+	ParentID      *pulid.ID
+	UserIDs       []pulid.ID
 }
 
 // Mutate applies the CreateTodoInput on the TodoMutation builder.
@@ -61,7 +62,7 @@ type CreateUserInput struct {
 	UpdatedAt   *time.Time
 	Username    string
 	DisplayName string
-	TodoIDs     []string
+	TodoIDs     []pulid.ID
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.

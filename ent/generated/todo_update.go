@@ -9,6 +9,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/predicate"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -90,14 +91,14 @@ func (tu *TodoUpdate) ClearTimeCompleted() *TodoUpdate {
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tu *TodoUpdate) AddChildIDs(ids ...string) *TodoUpdate {
+func (tu *TodoUpdate) AddChildIDs(ids ...pulid.ID) *TodoUpdate {
 	tu.mutation.AddChildIDs(ids...)
 	return tu
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tu *TodoUpdate) AddChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -105,13 +106,13 @@ func (tu *TodoUpdate) AddChildren(t ...*Todo) *TodoUpdate {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tu *TodoUpdate) SetParentID(id string) *TodoUpdate {
+func (tu *TodoUpdate) SetParentID(id pulid.ID) *TodoUpdate {
 	tu.mutation.SetParentID(id)
 	return tu
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tu *TodoUpdate) SetNillableParentID(id *string) *TodoUpdate {
+func (tu *TodoUpdate) SetNillableParentID(id *pulid.ID) *TodoUpdate {
 	if id != nil {
 		tu = tu.SetParentID(*id)
 	}
@@ -124,14 +125,14 @@ func (tu *TodoUpdate) SetParent(t *Todo) *TodoUpdate {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tu *TodoUpdate) AddUserIDs(ids ...string) *TodoUpdate {
+func (tu *TodoUpdate) AddUserIDs(ids ...pulid.ID) *TodoUpdate {
 	tu.mutation.AddUserIDs(ids...)
 	return tu
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tu *TodoUpdate) AddUser(u ...*User) *TodoUpdate {
-	ids := make([]string, len(u))
+	ids := make([]pulid.ID, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -150,14 +151,14 @@ func (tu *TodoUpdate) ClearChildren() *TodoUpdate {
 }
 
 // RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tu *TodoUpdate) RemoveChildIDs(ids ...string) *TodoUpdate {
+func (tu *TodoUpdate) RemoveChildIDs(ids ...pulid.ID) *TodoUpdate {
 	tu.mutation.RemoveChildIDs(ids...)
 	return tu
 }
 
 // RemoveChildren removes "children" edges to Todo entities.
 func (tu *TodoUpdate) RemoveChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -177,14 +178,14 @@ func (tu *TodoUpdate) ClearUser() *TodoUpdate {
 }
 
 // RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tu *TodoUpdate) RemoveUserIDs(ids ...string) *TodoUpdate {
+func (tu *TodoUpdate) RemoveUserIDs(ids ...pulid.ID) *TodoUpdate {
 	tu.mutation.RemoveUserIDs(ids...)
 	return tu
 }
 
 // RemoveUser removes "user" edges to User entities.
 func (tu *TodoUpdate) RemoveUser(u ...*User) *TodoUpdate {
-	ids := make([]string, len(u))
+	ids := make([]pulid.ID, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -477,14 +478,14 @@ func (tuo *TodoUpdateOne) ClearTimeCompleted() *TodoUpdateOne {
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tuo *TodoUpdateOne) AddChildIDs(ids ...string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) AddChildIDs(ids ...pulid.ID) *TodoUpdateOne {
 	tuo.mutation.AddChildIDs(ids...)
 	return tuo
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tuo *TodoUpdateOne) AddChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -492,13 +493,13 @@ func (tuo *TodoUpdateOne) AddChildren(t ...*Todo) *TodoUpdateOne {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tuo *TodoUpdateOne) SetParentID(id string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) SetParentID(id pulid.ID) *TodoUpdateOne {
 	tuo.mutation.SetParentID(id)
 	return tuo
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tuo *TodoUpdateOne) SetNillableParentID(id *string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) SetNillableParentID(id *pulid.ID) *TodoUpdateOne {
 	if id != nil {
 		tuo = tuo.SetParentID(*id)
 	}
@@ -511,14 +512,14 @@ func (tuo *TodoUpdateOne) SetParent(t *Todo) *TodoUpdateOne {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tuo *TodoUpdateOne) AddUserIDs(ids ...string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) AddUserIDs(ids ...pulid.ID) *TodoUpdateOne {
 	tuo.mutation.AddUserIDs(ids...)
 	return tuo
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tuo *TodoUpdateOne) AddUser(u ...*User) *TodoUpdateOne {
-	ids := make([]string, len(u))
+	ids := make([]pulid.ID, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -537,14 +538,14 @@ func (tuo *TodoUpdateOne) ClearChildren() *TodoUpdateOne {
 }
 
 // RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tuo *TodoUpdateOne) RemoveChildIDs(ids ...string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) RemoveChildIDs(ids ...pulid.ID) *TodoUpdateOne {
 	tuo.mutation.RemoveChildIDs(ids...)
 	return tuo
 }
 
 // RemoveChildren removes "children" edges to Todo entities.
 func (tuo *TodoUpdateOne) RemoveChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -564,14 +565,14 @@ func (tuo *TodoUpdateOne) ClearUser() *TodoUpdateOne {
 }
 
 // RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tuo *TodoUpdateOne) RemoveUserIDs(ids ...string) *TodoUpdateOne {
+func (tuo *TodoUpdateOne) RemoveUserIDs(ids ...pulid.ID) *TodoUpdateOne {
 	tuo.mutation.RemoveUserIDs(ids...)
 	return tuo
 }
 
 // RemoveUser removes "user" edges to User entities.
 func (tuo *TodoUpdateOne) RemoveUser(u ...*User) *TodoUpdateOne {
-	ids := make([]string, len(u))
+	ids := make([]pulid.ID, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}

@@ -6,6 +6,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 )
 
@@ -51,7 +52,7 @@ func init() {
 	// todoDescID is the schema descriptor for id field.
 	todoDescID := todoMixinFields0[0].Descriptor()
 	// todo.DefaultID holds the default value on creation for the id field.
-	todo.DefaultID = todoDescID.Default.(string)
+	todo.DefaultID = todoDescID.Default.(func() pulid.ID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0
@@ -94,5 +95,5 @@ func init() {
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
-	user.DefaultID = userDescID.Default.(string)
+	user.DefaultID = userDescID.Default.(func() pulid.ID)
 }

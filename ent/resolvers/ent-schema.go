@@ -8,15 +8,16 @@ import (
 	"context"
 	"lkuoch/ent-todo/ent/generated"
 	"lkuoch/ent-todo/ent/generated/gql"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 )
 
 // Node is the resolver for the node field.
-func (r *queryResolver) Node(ctx context.Context, id string) (generated.Noder, error) {
+func (r *queryResolver) Node(ctx context.Context, id pulid.ID) (generated.Noder, error) {
 	return r.client.Noder(ctx, id)
 }
 
 // Nodes is the resolver for the nodes field.
-func (r *queryResolver) Nodes(ctx context.Context, ids []string) ([]generated.Noder, error) {
+func (r *queryResolver) Nodes(ctx context.Context, ids []pulid.ID) ([]generated.Noder, error) {
 	return r.client.Noders(ctx, ids)
 }
 

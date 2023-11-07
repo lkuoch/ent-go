@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Todo holds the schema definition for the Todo entity.
@@ -18,7 +19,7 @@ type Todo struct {
 // Mixins of the Todo.
 func (Todo) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.IdMixin{},
+		mixins.NewIdMixin("todo"),
 		mixins.TimeMixin{},
 	}
 }
@@ -73,5 +74,13 @@ func (Todo) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationCreate()),
+	}
+}
+
+// Indexes of the Todo
+func (Todo) Indexes() []ent.Index {
+	return []ent.Index{
+		// Normal indexes
+		index.Fields("title", "priority", "status"),
 	}
 }

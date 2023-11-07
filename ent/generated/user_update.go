@@ -9,6 +9,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/predicate"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -48,14 +49,14 @@ func (uu *UserUpdate) SetDisplayName(s string) *UserUpdate {
 }
 
 // AddTodoIDs adds the "todos" edge to the Todo entity by IDs.
-func (uu *UserUpdate) AddTodoIDs(ids ...string) *UserUpdate {
+func (uu *UserUpdate) AddTodoIDs(ids ...pulid.ID) *UserUpdate {
 	uu.mutation.AddTodoIDs(ids...)
 	return uu
 }
 
 // AddTodos adds the "todos" edges to the Todo entity.
 func (uu *UserUpdate) AddTodos(t ...*Todo) *UserUpdate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -74,14 +75,14 @@ func (uu *UserUpdate) ClearTodos() *UserUpdate {
 }
 
 // RemoveTodoIDs removes the "todos" edge to Todo entities by IDs.
-func (uu *UserUpdate) RemoveTodoIDs(ids ...string) *UserUpdate {
+func (uu *UserUpdate) RemoveTodoIDs(ids ...pulid.ID) *UserUpdate {
 	uu.mutation.RemoveTodoIDs(ids...)
 	return uu
 }
 
 // RemoveTodos removes "todos" edges to Todo entities.
 func (uu *UserUpdate) RemoveTodos(t ...*Todo) *UserUpdate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -244,14 +245,14 @@ func (uuo *UserUpdateOne) SetDisplayName(s string) *UserUpdateOne {
 }
 
 // AddTodoIDs adds the "todos" edge to the Todo entity by IDs.
-func (uuo *UserUpdateOne) AddTodoIDs(ids ...string) *UserUpdateOne {
+func (uuo *UserUpdateOne) AddTodoIDs(ids ...pulid.ID) *UserUpdateOne {
 	uuo.mutation.AddTodoIDs(ids...)
 	return uuo
 }
 
 // AddTodos adds the "todos" edges to the Todo entity.
 func (uuo *UserUpdateOne) AddTodos(t ...*Todo) *UserUpdateOne {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -270,14 +271,14 @@ func (uuo *UserUpdateOne) ClearTodos() *UserUpdateOne {
 }
 
 // RemoveTodoIDs removes the "todos" edge to Todo entities by IDs.
-func (uuo *UserUpdateOne) RemoveTodoIDs(ids ...string) *UserUpdateOne {
+func (uuo *UserUpdateOne) RemoveTodoIDs(ids ...pulid.ID) *UserUpdateOne {
 	uuo.mutation.RemoveTodoIDs(ids...)
 	return uuo
 }
 
 // RemoveTodos removes "todos" edges to Todo entities.
 func (uuo *UserUpdateOne) RemoveTodos(t ...*Todo) *UserUpdateOne {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}

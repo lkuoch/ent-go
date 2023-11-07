@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // User holds the schema definition for the User entity.
@@ -18,7 +19,7 @@ type User struct {
 // Mixins of the User.
 func (User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.IdMixin{},
+		mixins.NewIdMixin("user"),
 		mixins.TimeMixin{},
 	}
 }
@@ -50,5 +51,16 @@ func (User) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationCreate()),
+	}
+}
+
+// Indexes of the User
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		// Normal indexes
+		index.Fields("display_name"),
+
+		// Unique indexes
+		index.Fields("username").Unique(),
 	}
 }

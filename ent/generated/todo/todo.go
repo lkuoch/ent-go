@@ -5,6 +5,7 @@ package todo
 import (
 	"fmt"
 	"io"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"strconv"
 	"time"
 
@@ -100,7 +101,7 @@ var (
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID string
+	DefaultID func() pulid.ID
 )
 
 // Priority defines the type for the "priority" enum field.

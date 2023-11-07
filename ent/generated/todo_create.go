@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -98,28 +99,28 @@ func (tc *TodoCreate) SetNillableTimeCompleted(t *time.Time) *TodoCreate {
 }
 
 // SetID sets the "id" field.
-func (tc *TodoCreate) SetID(s string) *TodoCreate {
-	tc.mutation.SetID(s)
+func (tc *TodoCreate) SetID(pu pulid.ID) *TodoCreate {
+	tc.mutation.SetID(pu)
 	return tc
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (tc *TodoCreate) SetNillableID(s *string) *TodoCreate {
-	if s != nil {
-		tc.SetID(*s)
+func (tc *TodoCreate) SetNillableID(pu *pulid.ID) *TodoCreate {
+	if pu != nil {
+		tc.SetID(*pu)
 	}
 	return tc
 }
 
 // AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tc *TodoCreate) AddChildIDs(ids ...string) *TodoCreate {
+func (tc *TodoCreate) AddChildIDs(ids ...pulid.ID) *TodoCreate {
 	tc.mutation.AddChildIDs(ids...)
 	return tc
 }
 
 // AddChildren adds the "children" edges to the Todo entity.
 func (tc *TodoCreate) AddChildren(t ...*Todo) *TodoCreate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -127,13 +128,13 @@ func (tc *TodoCreate) AddChildren(t ...*Todo) *TodoCreate {
 }
 
 // SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tc *TodoCreate) SetParentID(id string) *TodoCreate {
+func (tc *TodoCreate) SetParentID(id pulid.ID) *TodoCreate {
 	tc.mutation.SetParentID(id)
 	return tc
 }
 
 // SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tc *TodoCreate) SetNillableParentID(id *string) *TodoCreate {
+func (tc *TodoCreate) SetNillableParentID(id *pulid.ID) *TodoCreate {
 	if id != nil {
 		tc = tc.SetParentID(*id)
 	}
@@ -146,14 +147,14 @@ func (tc *TodoCreate) SetParent(t *Todo) *TodoCreate {
 }
 
 // AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tc *TodoCreate) AddUserIDs(ids ...string) *TodoCreate {
+func (tc *TodoCreate) AddUserIDs(ids ...pulid.ID) *TodoCreate {
 	tc.mutation.AddUserIDs(ids...)
 	return tc
 }
 
 // AddUser adds the "user" edges to the User entity.
 func (tc *TodoCreate) AddUser(u ...*User) *TodoCreate {
-	ids := make([]string, len(u))
+	ids := make([]pulid.ID, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -212,7 +213,7 @@ func (tc *TodoCreate) defaults() {
 		tc.mutation.SetStatus(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
-		v := todo.DefaultID
+		v := todo.DefaultID()
 		tc.mutation.SetID(v)
 	}
 }
@@ -264,10 +265,10 @@ func (tc *TodoCreate) sqlSave(ctx context.Context) (*Todo, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Todo.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*pulid.ID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	tc.mutation.id = &_node.ID
@@ -282,7 +283,7 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 	)
 	if id, ok := tc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(todo.FieldCreatedAt, field.TypeTime, value)

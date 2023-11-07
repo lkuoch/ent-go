@@ -1,22 +1,45 @@
 package mixins
 
 import (
+	pulid "lkuoch/ent-todo/ent/schema/types/pulid"
+
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
-
-	ulid "github.com/oklog/ulid/v2"
 )
 
 type IdMixin struct {
 	mixin.Schema
+	tableName string
 }
 
-func (IdMixin) Fields() []ent.Field {
+func NewIdMixin(tableName string) *IdMixin {
+	return &IdMixin{tableName: tableName}
+}
+
+func (i IdMixin) Fields() []ent.Field {
 	return []ent.Field{
 		field.
 			String("id").
 			Immutable().
-			Default(ulid.Make().String()),
+			GoType(pulid.ID("")).
+			DefaultFunc(func() pulid.ID {
+				return pulid.New(i.tableName)
+			}),
+	}
+}
+
+type Annotation struct {
+	Prefix string
+}
+
+func (a Annotation) Name() string {
+	return "PULID"
+}
+
+func (i IdMixin) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		Annotation{Prefix: i.tableName},
 	}
 }

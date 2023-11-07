@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -62,28 +63,28 @@ func (uc *UserCreate) SetDisplayName(s string) *UserCreate {
 }
 
 // SetID sets the "id" field.
-func (uc *UserCreate) SetID(s string) *UserCreate {
-	uc.mutation.SetID(s)
+func (uc *UserCreate) SetID(pu pulid.ID) *UserCreate {
+	uc.mutation.SetID(pu)
 	return uc
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (uc *UserCreate) SetNillableID(s *string) *UserCreate {
-	if s != nil {
-		uc.SetID(*s)
+func (uc *UserCreate) SetNillableID(pu *pulid.ID) *UserCreate {
+	if pu != nil {
+		uc.SetID(*pu)
 	}
 	return uc
 }
 
 // AddTodoIDs adds the "todos" edge to the Todo entity by IDs.
-func (uc *UserCreate) AddTodoIDs(ids ...string) *UserCreate {
+func (uc *UserCreate) AddTodoIDs(ids ...pulid.ID) *UserCreate {
 	uc.mutation.AddTodoIDs(ids...)
 	return uc
 }
 
 // AddTodos adds the "todos" edges to the Todo entity.
 func (uc *UserCreate) AddTodos(t ...*Todo) *UserCreate {
-	ids := make([]string, len(t))
+	ids := make([]pulid.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -134,7 +135,7 @@ func (uc *UserCreate) defaults() {
 		uc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := uc.mutation.ID(); !ok {
-		v := user.DefaultID
+		v := user.DefaultID()
 		uc.mutation.SetID(v)
 	}
 }
@@ -178,10 +179,10 @@ func (uc *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected User.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*pulid.ID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	uc.mutation.id = &_node.ID
@@ -196,7 +197,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	)
 	if id, ok := uc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := uc.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

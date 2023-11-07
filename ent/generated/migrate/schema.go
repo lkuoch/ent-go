@@ -32,6 +32,13 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "todo_title_priority_status",
+				Unique:  false,
+				Columns: []*schema.Column{TodosColumns[3], TodosColumns[4], TodosColumns[5]},
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -46,6 +53,18 @@ var (
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_display_name",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[4]},
+			},
+			{
+				Name:    "user_username",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[3]},
+			},
+		},
 	}
 	// UserTodosColumns holds the columns for the "user_todos" table.
 	UserTodosColumns = []*schema.Column{

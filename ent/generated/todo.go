@@ -5,6 +5,7 @@ package generated
 import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 type Todo struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID pulid.ID `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -32,7 +33,7 @@ type Todo struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TodoQuery when eager-loading is set.
 	Edges        TodoEdges `json:"edges"`
-	todo_parent  *string
+	todo_parent  *pulid.ID
 	selectValues sql.SelectValues
 }
 
@@ -90,12 +91,14 @@ func (*Todo) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case todo.FieldID, todo.FieldTitle, todo.FieldPriority, todo.FieldStatus:
+		case todo.FieldID:
+			values[i] = new(pulid.ID)
+		case todo.FieldTitle, todo.FieldPriority, todo.FieldStatus:
 			values[i] = new(sql.NullString)
 		case todo.FieldCreatedAt, todo.FieldUpdatedAt, todo.FieldTimeCompleted:
 			values[i] = new(sql.NullTime)
 		case todo.ForeignKeys[0]: // todo_parent
-			values[i] = new(sql.NullString)
+			values[i] = &sql.NullScanner{S: new(pulid.ID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -112,10 +115,10 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case todo.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*pulid.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				t.ID = value.String
+			} else if value != nil {
+				t.ID = *value
 			}
 		case todo.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -155,11 +158,11 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 				*t.TimeCompleted = value.Time
 			}
 		case todo.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field todo_parent", values[i])
 			} else if value.Valid {
-				t.todo_parent = new(string)
-				*t.todo_parent = value.String
+				t.todo_parent = new(pulid.ID)
+				*t.todo_parent = *value.S.(*pulid.ID)
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])

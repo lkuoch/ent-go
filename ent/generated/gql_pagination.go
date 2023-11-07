@@ -7,6 +7,7 @@ import (
 	"errors"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
@@ -18,8 +19,8 @@ import (
 
 // Common entgql types.
 type (
-	Cursor         = entgql.Cursor[string]
-	PageInfo       = entgql.PageInfo[string]
+	Cursor         = entgql.Cursor[pulid.ID]
+	PageInfo       = entgql.PageInfo[pulid.ID]
 	OrderDirection = entgql.OrderDirection
 )
 

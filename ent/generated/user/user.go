@@ -3,6 +3,7 @@
 package user
 
 import (
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -70,7 +71,7 @@ var (
 	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
 	DisplayNameValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID string
+	DefaultID func() pulid.ID
 )
 
 // OrderOption defines the ordering options for the User queries.

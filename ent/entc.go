@@ -8,7 +8,6 @@ import (
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
-	"entgo.io/ent/schema/field"
 )
 
 func main() {
@@ -16,6 +15,7 @@ func main() {
 		entgql.WithSchemaGenerator(),
 		entgql.WithSchemaPath("ent-schema.graphql"),
 		entgql.WithConfigPath("gqlgen.yml"),
+		entgql.WithWhereInputs(true),
 	)
 
 	if err != nil {
@@ -30,8 +30,8 @@ func main() {
 		Target:   "./ent/generated",
 		Package:  "lkuoch/ent-todo/ent/generated",
 		Features: []gen.Feature{gen.FeatureVersionedMigration},
-		IDType: &field.TypeInfo{
-			Type: field.TypeString,
+		Templates: []*gen.Template{
+			gen.MustParse(gen.NewTemplate("pulid").ParseFiles("./ent/schema/template/pulid.tmpl")),
 		},
 	}, options...); err != nil {
 		log.Fatalf("running ent codegen: %v", err)
