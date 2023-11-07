@@ -5,18 +5,25 @@ package generated
 import (
 	"context"
 	"fmt"
+	"lkuoch/ent-todo/ent/generated/todo"
+	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema/types/pulid"
 )
 
-// prefixMap maps PULID prefixes to table names.
-var prefixMap = map[pulid.ID]string{}
+// Map of prefix hash to table name
+var prefixMap = map[pulid.ID]string{
+	"2fbed1ef388301dd": todo.Table,
+	"7d6780e4032b48f2": user.Table,
+}
 
-// IDToType maps a pulid.ID to the underlying table.
-func IDToType(ctx context.Context, id pulid.ID) (string, error) {
-	if len(id) < 16 {
+// Resolver for node interface
+func IDToType(_ context.Context, id pulid.ID) (string, error) {
+	prefixLength := 16
+
+	if len(id) < prefixLength {
 		return "", fmt.Errorf("IDToType: id too short")
 	}
-	prefix := id[:16]
+	prefix := id[:prefixLength]
 	typ := prefixMap[prefix]
 	if typ == "" {
 		return "", fmt.Errorf("IDToType: could not map prefix '%s' to a type", prefix)

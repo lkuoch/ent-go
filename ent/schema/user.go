@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -16,15 +17,14 @@ type User struct {
 	ent.Schema
 }
 
-// Name
-func (User) Name() string {
-	return "users"
+func (User) TableName() string {
+	return "user"
 }
 
 // Mixins of the User.
 func (u User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.NewIdMixin(u.Name()),
+		mixins.NewIdMixin(u),
 		mixins.TimeMixin{},
 	}
 }
@@ -52,8 +52,9 @@ func (User) Edges() []ent.Edge {
 }
 
 // Annotations of the User.
-func (User) Annotations() []schema.Annotation {
+func (u User) Annotations() []schema.Annotation {
 	return []schema.Annotation{
+		entsql.Annotation{Table: u.TableName()},
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationCreate()),
 	}

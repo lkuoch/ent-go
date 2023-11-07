@@ -15,6 +15,7 @@ func main() {
 		entgql.WithSchemaGenerator(),
 		entgql.WithSchemaPath("ent-schema.graphql"),
 		entgql.WithConfigPath("gqlgen.yml"),
+		entgql.WithRelaySpec(true),
 		entgql.WithWhereInputs(true),
 	)
 
@@ -31,7 +32,7 @@ func main() {
 		Package:  "lkuoch/ent-todo/ent/generated",
 		Features: []gen.Feature{gen.FeatureVersionedMigration},
 		Templates: []*gen.Template{
-			gen.MustParse(gen.NewTemplate("pulid").ParseFiles("./ent/schema/template/pulid.tmpl")),
+			gen.MustParse(gen.NewTemplate("pulid").ParseFiles("./ent/schema/templates/pulid.tmpl")),
 		},
 	}, options...); err != nil {
 		log.Fatalf("running ent codegen: %v", err)

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	ent "lkuoch/ent-todo/ent/generated"
-	"lkuoch/ent-todo/ent/generated/migrate"
 	gql "lkuoch/ent-todo/ent/resolvers"
 
 	"entgo.io/ent/dialect"
@@ -25,13 +24,9 @@ func main() {
 	defer client.Close()
 	if err := client.Schema.Create(
 		context.Background(),
-		migrate.WithGlobalUniqueID(true),
 	); err != nil {
 		log.Fatal("opening ent client", err)
 	}
-
-	// Setup resolver name service
-	gql.ResolverNameService{}.Init()
 
 	// Configure the server and start listening on :8081.
 	srv := handler.NewDefaultServer(gql.NewSchema(client))

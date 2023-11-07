@@ -11,14 +11,16 @@ import (
 
 type IdMixin struct {
 	mixin.Schema
-	tableHash string
 	tableName string
 }
 
-func NewIdMixin(tableName string) *IdMixin {
+type IdMixinConfig interface {
+	TableName() string
+}
+
+func NewIdMixin(meta IdMixinConfig) *IdMixin {
 	return &IdMixin{
-		tableName: tableName,
-		tableHash: pulid.ExtractPrefixHash(pulid.New(tableName)),
+		tableName: meta.TableName(),
 	}
 }
 
@@ -39,11 +41,11 @@ type Annotation struct {
 }
 
 func (a Annotation) Name() string {
-	return a.Prefix
+	return "__PULID__"
 }
 
 func (i IdMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		Annotation{Prefix: i.tableHash},
+		Annotation{Prefix: pulid.NewPrefix(i.tableName)},
 	}
 }

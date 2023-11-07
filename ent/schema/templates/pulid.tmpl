@@ -3,21 +3,23 @@
 {{ $pkg := base $.Config.Package }}
 {{ template "header" $ }}
 
-// prefixMap maps PULID prefixes to table names.
+// Map of prefix hash to table name
 var prefixMap = map[pulid.ID]string{
 	{{- range $node := $.Nodes }}
-		{{- if $annotation := $node.Annotations.PULID }}
+		{{- if $annotation := $node.Annotations.__PULID__ }}
 			"{{ $annotation.Prefix }}": {{ $node.Package }}.Table,
 		{{- end }}
 	{{- end }}
 }
 
-// IDToType maps a pulid.ID to the underlying table.
-func IDToType(ctx context.Context, id pulid.ID) (string, error) {
-	if len(id) < 16 {
+// Resolver for node interface
+func IDToType(_ context.Context, id pulid.ID) (string, error) {
+	prefixLength := 16
+
+	if len(id) < prefixLength {
 		return "", fmt.Errorf("IDToType: id too short")
 	}
-	prefix := id[:16]
+	prefix := id[:prefixLength]
 	typ := prefixMap[prefix]
 	if typ == "" {
 		return "", fmt.Errorf("IDToType: could not map prefix '%s' to a type", prefix)

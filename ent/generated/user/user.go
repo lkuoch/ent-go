@@ -26,12 +26,12 @@ const (
 	// EdgeTodos holds the string denoting the todos edge name in mutations.
 	EdgeTodos = "todos"
 	// Table holds the table name of the user in the database.
-	Table = "users"
+	Table = "user"
 	// TodosTable is the table that holds the todos relation/edge. The primary key declared below.
 	TodosTable = "user_todos"
 	// TodosInverseTable is the table name for the Todo entity.
 	// It exists in this package in order to avoid circular dependency with the "todo" package.
-	TodosInverseTable = "todos"
+	TodosInverseTable = "todo"
 )
 
 // Columns holds all SQL columns for user fields.

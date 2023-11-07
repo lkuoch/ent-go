@@ -33,10 +33,10 @@ func init() {
 // Generates a new ULID from the table name
 // Accepts a tableName which will then be hashed (FNV) to the prefix of the ULID
 func New(tableName string) ID {
-	prefix := hash64(tableName)
+	prefix := NewPrefix(tableName)
 	ulid := ulid.MustNew(ulid.Timestamp(time.Now()), defaultEntropySource).String()
 
-	return ID(fmt.Sprintf("%x:%s", prefix, ulid))
+	return ID(prefix + ulid)
 }
 
 func NewPrefix(tableName string) string {

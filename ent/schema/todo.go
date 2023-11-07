@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -16,15 +17,14 @@ type Todo struct {
 	ent.Schema
 }
 
-// Name
-func (Todo) Name() string {
-	return "todos"
+func (Todo) TableName() string {
+	return "todo"
 }
 
 // Mixins of the Todo.
 func (t Todo) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.NewIdMixin(t.Name()),
+		mixins.NewIdMixin(t),
 		mixins.TimeMixin{},
 	}
 }
@@ -75,8 +75,9 @@ func (Todo) Edges() []ent.Edge {
 }
 
 // Annotations of the Todo.
-func (Todo) Annotations() []schema.Annotation {
+func (t Todo) Annotations() []schema.Annotation {
 	return []schema.Annotation{
+		entsql.Annotation{Table: t.TableName()},
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationCreate()),
 	}

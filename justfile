@@ -15,30 +15,33 @@ generate:
 regenerate:
   rm -rf ./ent-schema.graphql ./ent/generated && just generate
 
-migration-create:
+migrate-create:
   atlas migrate diff migration_name \
     --dir "file://ent/migrate/migrations" \
     --to "ent://ent/schema" \
     --dev-url "sqlite://file?mode=memory&_fk=1"
 
-migration-apply:
+migrate-apply:
   atlas migrate apply \
     --dir "file://ent/migrate/migrations" \
     --url "sqlite://test-db.db?_fk=1"
 
-migration-status:
+migrate-status:
   atlas migrate status \
     --dir "file://ent/migrate/migrations" \
     --url "sqlite://test-db.db?_fk=1"
 
-migration-diff:
+migrate-diff:
   atlas migrate diff migration_name \
     --dir "file://ent/migrate/migrations" \
     --to "ent://ent/schema" \
     --dev-url "sqlite://test-db?mode=memory&_fk=1"
 
-migration-run:
-  just migration-create && just migration-apply && just migration-status
+migrate-run:
+  just migrate-create && just migrate-apply && just migrate-status
+
+reset-all:
+  rm -rf ./test-db.db && just migrate-create && just migrate-apply && just migrate-status && just regenerate
 
 run:
   go run service/server.go

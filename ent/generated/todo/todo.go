@@ -37,20 +37,20 @@ const (
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the todo in the database.
-	Table = "todos"
+	Table = "todo"
 	// ChildrenTable is the table that holds the children relation/edge.
-	ChildrenTable = "todos"
+	ChildrenTable = "todo"
 	// ChildrenColumn is the table column denoting the children relation/edge.
 	ChildrenColumn = "todo_parent"
 	// ParentTable is the table that holds the parent relation/edge.
-	ParentTable = "todos"
+	ParentTable = "todo"
 	// ParentColumn is the table column denoting the parent relation/edge.
 	ParentColumn = "todo_parent"
 	// UserTable is the table that holds the user relation/edge. The primary key declared below.
 	UserTable = "user_todos"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UserInverseTable = "users"
+	UserInverseTable = "user"
 )
 
 // Columns holds all SQL columns for todo fields.
@@ -64,7 +64,7 @@ var Columns = []string{
 	FieldTimeCompleted,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "todos"
+// ForeignKeys holds the SQL foreign-keys that are owned by the "todo"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"todo_parent",

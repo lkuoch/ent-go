@@ -1,36 +1,16 @@
 package resolvers
 
 import (
-	"lkuoch/ent-todo/ent/schema"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
-	"sync"
+	ent "lkuoch/ent-todo/ent/generated"
+	gql "lkuoch/ent-todo/ent/generated/gql"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
-type ResolverNameService struct{}
+type Resolver struct{ client *ent.Client }
 
-var (
-	resolverMap    = make(map[string]string)
-	configMapMutex sync.RWMutex
-)
-
-func (ResolverNameService) SetName(tableName string) {
-	configMapMutex.Lock()
-	key := pulid.NewPrefix(tableName)
-	resolverMap[key] = tableName
-	configMapMutex.Unlock()
-}
-
-func (ResolverNameService) GetName(tableName string) *string {
-	value, ok := resolverMap[tableName]
-
-	if !ok {
-		return nil
-	}
-
-	return &value
-}
-
-func (r ResolverNameService) Init() {
-	r.SetName(schema.User{}.Name())
-	r.SetName(schema.Todo{}.Name())
+func NewSchema(client *ent.Client) graphql.ExecutableSchema {
+	return gql.NewExecutableSchema(gql.Config{
+		Resolvers: &Resolver{client},
+	})
 }

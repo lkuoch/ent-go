@@ -11,3 +11,12 @@
    - Needed when changing schema files
 2. `just run`
    - Spins up graphql server
+
+
+## Tasks
+- [x] Setup migrations
+- [x] Setup Relay Node Interface
+- [ ] Setup relations
+- [ ] Setup more tables + operations
+- [ ] Setup permissions
+- [ ] Setup multi-tenancy

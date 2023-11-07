@@ -3,13 +3,14 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
-	// TodosColumns holds the columns for the "todos" table.
-	TodosColumns = []*schema.Column{
+	// TodoColumns holds the columns for the "todo" table.
+	TodoColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -19,16 +20,16 @@ var (
 		{Name: "time_completed", Type: field.TypeTime, Nullable: true},
 		{Name: "todo_parent", Type: field.TypeString, Nullable: true},
 	}
-	// TodosTable holds the schema information for the "todos" table.
-	TodosTable = &schema.Table{
-		Name:       "todos",
-		Columns:    TodosColumns,
-		PrimaryKey: []*schema.Column{TodosColumns[0]},
+	// TodoTable holds the schema information for the "todo" table.
+	TodoTable = &schema.Table{
+		Name:       "todo",
+		Columns:    TodoColumns,
+		PrimaryKey: []*schema.Column{TodoColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "todos_todos_parent",
-				Columns:    []*schema.Column{TodosColumns[7]},
-				RefColumns: []*schema.Column{TodosColumns[0]},
+				Symbol:     "todo_todo_parent",
+				Columns:    []*schema.Column{TodoColumns[7]},
+				RefColumns: []*schema.Column{TodoColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -36,33 +37,33 @@ var (
 			{
 				Name:    "todo_title_priority_status",
 				Unique:  false,
-				Columns: []*schema.Column{TodosColumns[3], TodosColumns[4], TodosColumns[5]},
+				Columns: []*schema.Column{TodoColumns[3], TodoColumns[4], TodoColumns[5]},
 			},
 		},
 	}
-	// UsersColumns holds the columns for the "users" table.
-	UsersColumns = []*schema.Column{
+	// UserColumns holds the columns for the "user" table.
+	UserColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 18},
 		{Name: "display_name", Type: field.TypeString},
 	}
-	// UsersTable holds the schema information for the "users" table.
-	UsersTable = &schema.Table{
-		Name:       "users",
-		Columns:    UsersColumns,
-		PrimaryKey: []*schema.Column{UsersColumns[0]},
+	// UserTable holds the schema information for the "user" table.
+	UserTable = &schema.Table{
+		Name:       "user",
+		Columns:    UserColumns,
+		PrimaryKey: []*schema.Column{UserColumns[0]},
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_display_name",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[4]},
+				Columns: []*schema.Column{UserColumns[4]},
 			},
 			{
 				Name:    "user_username",
 				Unique:  true,
-				Columns: []*schema.Column{UsersColumns[3]},
+				Columns: []*schema.Column{UserColumns[3]},
 			},
 		},
 	}
@@ -80,27 +81,33 @@ var (
 			{
 				Symbol:     "user_todos_user_id",
 				Columns:    []*schema.Column{UserTodosColumns[0]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
+				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "user_todos_todo_id",
 				Columns:    []*schema.Column{UserTodosColumns[1]},
-				RefColumns: []*schema.Column{TodosColumns[0]},
+				RefColumns: []*schema.Column{TodoColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		TodosTable,
-		UsersTable,
+		TodoTable,
+		UserTable,
 		UserTodosTable,
 	}
 )
 
 func init() {
-	TodosTable.ForeignKeys[0].RefTable = TodosTable
-	UserTodosTable.ForeignKeys[0].RefTable = UsersTable
-	UserTodosTable.ForeignKeys[1].RefTable = TodosTable
+	TodoTable.ForeignKeys[0].RefTable = TodoTable
+	TodoTable.Annotation = &entsql.Annotation{
+		Table: "todo",
+	}
+	UserTable.Annotation = &entsql.Annotation{
+		Table: "user",
+	}
+	UserTodosTable.ForeignKeys[0].RefTable = UserTable
+	UserTodosTable.ForeignKeys[1].RefTable = TodoTable
 }
