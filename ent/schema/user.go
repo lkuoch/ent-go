@@ -16,10 +16,15 @@ type User struct {
 	ent.Schema
 }
 
+// Name
+func (User) Name() string {
+	return "users"
+}
+
 // Mixins of the User.
-func (User) Mixin() []ent.Mixin {
+func (u User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.NewIdMixin("user"),
+		mixins.NewIdMixin(u.Name()),
 		mixins.TimeMixin{},
 	}
 }

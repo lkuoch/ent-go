@@ -7,6 +7,7 @@ import (
 	"hash/fnv"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -35,7 +36,18 @@ func New(tableName string) ID {
 	prefix := hash64(tableName)
 	ulid := ulid.MustNew(ulid.Timestamp(time.Now()), defaultEntropySource).String()
 
-	return ID(fmt.Sprintf("%x%s", prefix, ulid))
+	return ID(fmt.Sprintf("%x:%s", prefix, ulid))
+}
+
+func NewPrefix(tableName string) string {
+	return fmt.Sprintf("%x", hash64(tableName))
+}
+
+func ExtractPrefixHash(id ID) string {
+	tuple := strings.Split(string(id), ":")
+	prefix := tuple[0]
+
+	return prefix
 }
 
 // Scan implements the Scanner interface.

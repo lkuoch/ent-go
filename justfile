@@ -7,7 +7,7 @@ list:
   just --list
 
 build:
-  go build service/ent-todo.go
+  go build service/server.go
 
 generate:
   go generate .

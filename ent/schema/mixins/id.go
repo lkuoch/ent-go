@@ -11,11 +11,15 @@ import (
 
 type IdMixin struct {
 	mixin.Schema
+	tableHash string
 	tableName string
 }
 
 func NewIdMixin(tableName string) *IdMixin {
-	return &IdMixin{tableName: tableName}
+	return &IdMixin{
+		tableName: tableName,
+		tableHash: pulid.ExtractPrefixHash(pulid.New(tableName)),
+	}
 }
 
 func (i IdMixin) Fields() []ent.Field {
@@ -23,7 +27,7 @@ func (i IdMixin) Fields() []ent.Field {
 		field.
 			String("id").
 			Immutable().
-			GoType(pulid.ID("")).
+			GoType(pulid.ID(i.tableName)).
 			DefaultFunc(func() pulid.ID {
 				return pulid.New(i.tableName)
 			}),
@@ -35,11 +39,11 @@ type Annotation struct {
 }
 
 func (a Annotation) Name() string {
-	return "PULID"
+	return a.Prefix
 }
 
 func (i IdMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		Annotation{Prefix: i.tableName},
+		Annotation{Prefix: i.tableHash},
 	}
 }

@@ -30,6 +30,9 @@ func main() {
 		log.Fatal("opening ent client", err)
 	}
 
+	// Setup resolver name service
+	gql.ResolverNameService{}.Init()
+
 	// Configure the server and start listening on :8081.
 	srv := handler.NewDefaultServer(gql.NewSchema(client))
 	http.Handle("/",

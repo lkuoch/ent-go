@@ -5,16 +5,11 @@ package generated
 import (
 	"context"
 	"fmt"
-	"lkuoch/ent-todo/ent/generated/todo"
-	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema/types/pulid"
 )
 
 // prefixMap maps PULID prefixes to table names.
-var prefixMap = map[pulid.ID]string{
-	"todo": todo.Table,
-	"user": user.Table,
-}
+var prefixMap = map[pulid.ID]string{}
 
 // IDToType maps a pulid.ID to the underlying table.
 func IDToType(ctx context.Context, id pulid.ID) (string, error) {

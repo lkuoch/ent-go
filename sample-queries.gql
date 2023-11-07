@@ -1,0 +1,39 @@
+mutation CreateTodo {
+  createTodo(input: {title: "My 1st Todo", priority: HIGH, status: IN_PROGRESS}) {
+    id
+    title
+  }
+}
+
+mutation CreateUser {
+  createUser(input: {username: "tester", displayName: "test test"}) {
+    id
+    createdAt
+  }
+}
+
+query Queries {
+  todos {
+    id
+    title
+  }
+  users {
+    id
+    username
+    displayName
+  }
+}
+
+query Node {
+  node(id: "42288471628c3333:01HEM47RR02DSGZMPY164SWW2P") {
+    ... on Todo {
+      __typename
+      id
+      title
+    }
+    ... on User {
+      id
+      username
+    }
+  }
+}

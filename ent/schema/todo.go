@@ -16,10 +16,15 @@ type Todo struct {
 	ent.Schema
 }
 
+// Name
+func (Todo) Name() string {
+	return "todos"
+}
+
 // Mixins of the Todo.
-func (Todo) Mixin() []ent.Mixin {
+func (t Todo) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		mixins.NewIdMixin("todo"),
+		mixins.NewIdMixin(t.Name()),
 		mixins.TimeMixin{},
 	}
 }
