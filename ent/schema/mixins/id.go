@@ -3,6 +3,7 @@ package mixins
 import (
 	pulid "lkuoch/ent-todo/ent/schema/types/pulid"
 
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
@@ -32,7 +33,10 @@ func (i IdMixin) Fields() []ent.Field {
 			GoType(pulid.ID(i.tableName)).
 			DefaultFunc(func() pulid.ID {
 				return pulid.New(i.tableName)
-			}),
+			}).
+			Annotations(
+				entgql.OrderField("ID"),
+			),
 	}
 }
 

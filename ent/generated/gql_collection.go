@@ -7,6 +7,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
 
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 )
@@ -32,28 +33,6 @@ func (t *TodoQuery) collectField(ctx context.Context, opCtx *graphql.OperationCo
 	)
 	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
 		switch field.Name {
-		case "children":
-			var (
-				alias = field.Alias
-				path  = append(path, alias)
-				query = (&TodoClient{config: t.config}).Query()
-			)
-			if err := query.collectField(ctx, opCtx, field, path, satisfies...); err != nil {
-				return err
-			}
-			t.WithNamedChildren(alias, func(wq *TodoQuery) {
-				*wq = *query
-			})
-		case "parent":
-			var (
-				alias = field.Alias
-				path  = append(path, alias)
-				query = (&TodoClient{config: t.config}).Query()
-			)
-			if err := query.collectField(ctx, opCtx, field, path, satisfies...); err != nil {
-				return err
-			}
-			t.withParent = query
 		case "user":
 			var (
 				alias = field.Alias
@@ -63,9 +42,7 @@ func (t *TodoQuery) collectField(ctx context.Context, opCtx *graphql.OperationCo
 			if err := query.collectField(ctx, opCtx, field, path, satisfies...); err != nil {
 				return err
 			}
-			t.WithNamedUser(alias, func(wq *UserQuery) {
-				*wq = *query
-			})
+			t.withUser = query
 		case "createdAt":
 			if _, ok := fieldSeen[todo.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, todo.FieldCreatedAt)
@@ -130,6 +107,34 @@ func newTodoPaginateArgs(rv map[string]any) *todoPaginateArgs {
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case []*TodoOrder:
+			args.opts = append(args.opts, WithTodoOrder(v))
+		case []any:
+			var orders []*TodoOrder
+			for i := range v {
+				mv, ok := v[i].(map[string]any)
+				if !ok {
+					continue
+				}
+				var (
+					err1, err2 error
+					order      = &TodoOrder{Field: &TodoOrderField{}, Direction: entgql.OrderDirectionAsc}
+				)
+				if d, ok := mv[directionField]; ok {
+					err1 = order.Direction.UnmarshalGQL(d)
+				}
+				if f, ok := mv[fieldField]; ok {
+					err2 = order.Field.UnmarshalGQL(f)
+				}
+				if err1 == nil && err2 == nil {
+					orders = append(orders, order)
+				}
+			}
+			args.opts = append(args.opts, WithTodoOrder(orders))
+		}
 	}
 	if v, ok := rv[whereField].(*TodoWhereInput); ok {
 		args.opts = append(args.opts, WithTodoFilter(v.Filter))
@@ -224,6 +229,34 @@ func newUserPaginateArgs(rv map[string]any) *userPaginateArgs {
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case []*UserOrder:
+			args.opts = append(args.opts, WithUserOrder(v))
+		case []any:
+			var orders []*UserOrder
+			for i := range v {
+				mv, ok := v[i].(map[string]any)
+				if !ok {
+					continue
+				}
+				var (
+					err1, err2 error
+					order      = &UserOrder{Field: &UserOrderField{}, Direction: entgql.OrderDirectionAsc}
+				)
+				if d, ok := mv[directionField]; ok {
+					err1 = order.Direction.UnmarshalGQL(d)
+				}
+				if f, ok := mv[fieldField]; ok {
+					err2 = order.Field.UnmarshalGQL(f)
+				}
+				if err1 == nil && err2 == nil {
+					orders = append(orders, order)
+				}
+			}
+			args.opts = append(args.opts, WithUserOrder(orders))
+		}
 	}
 	if v, ok := rv[whereField].(*UserWhereInput); ok {
 		args.opts = append(args.opts, WithUserFilter(v.Filter))

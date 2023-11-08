@@ -35,7 +35,9 @@ func (Todo) Fields() []ent.Field {
 		field.
 			String("title").
 			MaxLen(26).
-			NotEmpty(),
+			NotEmpty().Annotations(
+			entgql.OrderField("TITLE"),
+		),
 
 		field.
 			Enum("priority").
@@ -65,12 +67,10 @@ func (Todo) Fields() []ent.Field {
 // Edges of the Todo.
 func (Todo) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("parent", Todo.Type).
-			Unique().
-			From("children"),
-
+		// A todo can belong to only one user
 		edge.From("user", User.Type).
-			Ref("todos"),
+			Ref("todos").
+			Unique(),
 	}
 }
 
@@ -78,8 +78,10 @@ func (Todo) Edges() []ent.Edge {
 func (t Todo) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.Annotation{Table: t.TableName()},
+		entgql.RelayConnection(),
 		entgql.QueryField(),
-		entgql.Mutations(entgql.MutationCreate()),
+		entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),
+		entgql.MultiOrder(),
 	}
 }
 

@@ -16,7 +16,7 @@
 ## Tasks
 - [x] Setup migrations
 - [x] Setup Relay Node Interface
-- [ ] Setup relations
+- [x] Setup relations
 - [ ] Setup more tables + operations
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy

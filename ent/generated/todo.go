@@ -5,6 +5,7 @@ package generated
 import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
+	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"strings"
 	"time"
@@ -33,54 +34,29 @@ type Todo struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TodoQuery when eager-loading is set.
 	Edges        TodoEdges `json:"edges"`
-	todo_parent  *pulid.ID
+	user_todos   *pulid.ID
 	selectValues sql.SelectValues
 }
 
 // TodoEdges holds the relations/edges for other nodes in the graph.
 type TodoEdges struct {
-	// Children holds the value of the children edge.
-	Children []*Todo `json:"children,omitempty"`
-	// Parent holds the value of the parent edge.
-	Parent *Todo `json:"parent,omitempty"`
 	// User holds the value of the user edge.
-	User []*User `json:"user,omitempty"`
+	User *User `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [1]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
-
-	namedChildren map[string][]*Todo
-	namedUser     map[string][]*User
-}
-
-// ChildrenOrErr returns the Children value or an error if the edge
-// was not loaded in eager-loading.
-func (e TodoEdges) ChildrenOrErr() ([]*Todo, error) {
-	if e.loadedTypes[0] {
-		return e.Children, nil
-	}
-	return nil, &NotLoadedError{edge: "children"}
-}
-
-// ParentOrErr returns the Parent value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TodoEdges) ParentOrErr() (*Todo, error) {
-	if e.loadedTypes[1] {
-		if e.Parent == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: todo.Label}
-		}
-		return e.Parent, nil
-	}
-	return nil, &NotLoadedError{edge: "parent"}
+	totalCount [1]map[string]int
 }
 
 // UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading.
-func (e TodoEdges) UserOrErr() ([]*User, error) {
-	if e.loadedTypes[2] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TodoEdges) UserOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.User == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
 		return e.User, nil
 	}
 	return nil, &NotLoadedError{edge: "user"}
@@ -97,7 +73,7 @@ func (*Todo) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case todo.FieldCreatedAt, todo.FieldUpdatedAt, todo.FieldTimeCompleted:
 			values[i] = new(sql.NullTime)
-		case todo.ForeignKeys[0]: // todo_parent
+		case todo.ForeignKeys[0]: // user_todos
 			values[i] = &sql.NullScanner{S: new(pulid.ID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -159,10 +135,10 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 			}
 		case todo.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field todo_parent", values[i])
+				return fmt.Errorf("unexpected type %T for field user_todos", values[i])
 			} else if value.Valid {
-				t.todo_parent = new(pulid.ID)
-				*t.todo_parent = *value.S.(*pulid.ID)
+				t.user_todos = new(pulid.ID)
+				*t.user_todos = *value.S.(*pulid.ID)
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
@@ -175,16 +151,6 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Todo) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
-}
-
-// QueryChildren queries the "children" edge of the Todo entity.
-func (t *Todo) QueryChildren() *TodoQuery {
-	return NewTodoClient(t.config).QueryChildren(t)
-}
-
-// QueryParent queries the "parent" edge of the Todo entity.
-func (t *Todo) QueryParent() *TodoQuery {
-	return NewTodoClient(t.config).QueryParent(t)
 }
 
 // QueryUser queries the "user" edge of the Todo entity.
@@ -236,54 +202,6 @@ func (t *Todo) String() string {
 	}
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedChildren returns the Children named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (t *Todo) NamedChildren(name string) ([]*Todo, error) {
-	if t.Edges.namedChildren == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := t.Edges.namedChildren[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (t *Todo) appendNamedChildren(name string, edges ...*Todo) {
-	if t.Edges.namedChildren == nil {
-		t.Edges.namedChildren = make(map[string][]*Todo)
-	}
-	if len(edges) == 0 {
-		t.Edges.namedChildren[name] = []*Todo{}
-	} else {
-		t.Edges.namedChildren[name] = append(t.Edges.namedChildren[name], edges...)
-	}
-}
-
-// NamedUser returns the User named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (t *Todo) NamedUser(name string) ([]*User, error) {
-	if t.Edges.namedUser == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := t.Edges.namedUser[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (t *Todo) appendNamedUser(name string, edges ...*User) {
-	if t.Edges.namedUser == nil {
-		t.Edges.namedUser = make(map[string][]*User)
-	}
-	if len(edges) == 0 {
-		t.Edges.namedUser[name] = []*User{}
-	} else {
-		t.Edges.namedUser[name] = append(t.Edges.namedUser[name], edges...)
-	}
 }
 
 // Todos is a parsable slice of Todo.

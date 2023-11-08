@@ -47,7 +47,11 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		// Uesr can have multiple todos
 		edge.To("todos", Todo.Type),
+
+		// TODO: Figure out connection
+		// Annotations(entgql.RelayConnection()),
 	}
 }
 
@@ -55,8 +59,10 @@ func (User) Edges() []ent.Edge {
 func (u User) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.Annotation{Table: u.TableName()},
+		entgql.RelayConnection(),
 		entgql.QueryField(),
-		entgql.Mutations(entgql.MutationCreate()),
+		entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),
+		entgql.MultiOrder(),
 	}
 }
 

@@ -90,53 +90,23 @@ func (tu *TodoUpdate) ClearTimeCompleted() *TodoUpdate {
 	return tu
 }
 
-// AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tu *TodoUpdate) AddChildIDs(ids ...pulid.ID) *TodoUpdate {
-	tu.mutation.AddChildIDs(ids...)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tu *TodoUpdate) SetUserID(id pulid.ID) *TodoUpdate {
+	tu.mutation.SetUserID(id)
 	return tu
 }
 
-// AddChildren adds the "children" edges to the Todo entity.
-func (tu *TodoUpdate) AddChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]pulid.ID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tu.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tu *TodoUpdate) SetParentID(id pulid.ID) *TodoUpdate {
-	tu.mutation.SetParentID(id)
-	return tu
-}
-
-// SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tu *TodoUpdate) SetNillableParentID(id *pulid.ID) *TodoUpdate {
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (tu *TodoUpdate) SetNillableUserID(id *pulid.ID) *TodoUpdate {
 	if id != nil {
-		tu = tu.SetParentID(*id)
+		tu = tu.SetUserID(*id)
 	}
 	return tu
 }
 
-// SetParent sets the "parent" edge to the Todo entity.
-func (tu *TodoUpdate) SetParent(t *Todo) *TodoUpdate {
-	return tu.SetParentID(t.ID)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tu *TodoUpdate) AddUserIDs(ids ...pulid.ID) *TodoUpdate {
-	tu.mutation.AddUserIDs(ids...)
-	return tu
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tu *TodoUpdate) AddUser(u ...*User) *TodoUpdate {
-	ids := make([]pulid.ID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tu.AddUserIDs(ids...)
+// SetUser sets the "user" edge to the User entity.
+func (tu *TodoUpdate) SetUser(u *User) *TodoUpdate {
+	return tu.SetUserID(u.ID)
 }
 
 // Mutation returns the TodoMutation object of the builder.
@@ -144,52 +114,10 @@ func (tu *TodoUpdate) Mutation() *TodoMutation {
 	return tu.mutation
 }
 
-// ClearChildren clears all "children" edges to the Todo entity.
-func (tu *TodoUpdate) ClearChildren() *TodoUpdate {
-	tu.mutation.ClearChildren()
-	return tu
-}
-
-// RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tu *TodoUpdate) RemoveChildIDs(ids ...pulid.ID) *TodoUpdate {
-	tu.mutation.RemoveChildIDs(ids...)
-	return tu
-}
-
-// RemoveChildren removes "children" edges to Todo entities.
-func (tu *TodoUpdate) RemoveChildren(t ...*Todo) *TodoUpdate {
-	ids := make([]pulid.ID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tu.RemoveChildIDs(ids...)
-}
-
-// ClearParent clears the "parent" edge to the Todo entity.
-func (tu *TodoUpdate) ClearParent() *TodoUpdate {
-	tu.mutation.ClearParent()
-	return tu
-}
-
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (tu *TodoUpdate) ClearUser() *TodoUpdate {
 	tu.mutation.ClearUser()
 	return tu
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tu *TodoUpdate) RemoveUserIDs(ids ...pulid.ID) *TodoUpdate {
-	tu.mutation.RemoveUserIDs(ids...)
-	return tu
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (tu *TodoUpdate) RemoveUser(u ...*User) *TodoUpdate {
-	ids := make([]pulid.ID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tu.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -278,115 +206,25 @@ func (tu *TodoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if tu.mutation.TimeCompletedCleared() {
 		_spec.ClearField(todo.FieldTimeCompleted, field.TypeTime)
 	}
-	if tu.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !tu.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tu.mutation.ParentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   todo.ParentTable,
-			Columns: []string{todo.ParentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.ParentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   todo.ParentTable,
-			Columns: []string{todo.ParentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if tu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
+			Columns: []string{todo.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.RemovedUserIDs(); len(nodes) > 0 && !tu.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tu.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
+			Columns: []string{todo.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
@@ -477,53 +315,23 @@ func (tuo *TodoUpdateOne) ClearTimeCompleted() *TodoUpdateOne {
 	return tuo
 }
 
-// AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tuo *TodoUpdateOne) AddChildIDs(ids ...pulid.ID) *TodoUpdateOne {
-	tuo.mutation.AddChildIDs(ids...)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tuo *TodoUpdateOne) SetUserID(id pulid.ID) *TodoUpdateOne {
+	tuo.mutation.SetUserID(id)
 	return tuo
 }
 
-// AddChildren adds the "children" edges to the Todo entity.
-func (tuo *TodoUpdateOne) AddChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]pulid.ID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tuo.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tuo *TodoUpdateOne) SetParentID(id pulid.ID) *TodoUpdateOne {
-	tuo.mutation.SetParentID(id)
-	return tuo
-}
-
-// SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tuo *TodoUpdateOne) SetNillableParentID(id *pulid.ID) *TodoUpdateOne {
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (tuo *TodoUpdateOne) SetNillableUserID(id *pulid.ID) *TodoUpdateOne {
 	if id != nil {
-		tuo = tuo.SetParentID(*id)
+		tuo = tuo.SetUserID(*id)
 	}
 	return tuo
 }
 
-// SetParent sets the "parent" edge to the Todo entity.
-func (tuo *TodoUpdateOne) SetParent(t *Todo) *TodoUpdateOne {
-	return tuo.SetParentID(t.ID)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tuo *TodoUpdateOne) AddUserIDs(ids ...pulid.ID) *TodoUpdateOne {
-	tuo.mutation.AddUserIDs(ids...)
-	return tuo
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tuo *TodoUpdateOne) AddUser(u ...*User) *TodoUpdateOne {
-	ids := make([]pulid.ID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tuo.AddUserIDs(ids...)
+// SetUser sets the "user" edge to the User entity.
+func (tuo *TodoUpdateOne) SetUser(u *User) *TodoUpdateOne {
+	return tuo.SetUserID(u.ID)
 }
 
 // Mutation returns the TodoMutation object of the builder.
@@ -531,52 +339,10 @@ func (tuo *TodoUpdateOne) Mutation() *TodoMutation {
 	return tuo.mutation
 }
 
-// ClearChildren clears all "children" edges to the Todo entity.
-func (tuo *TodoUpdateOne) ClearChildren() *TodoUpdateOne {
-	tuo.mutation.ClearChildren()
-	return tuo
-}
-
-// RemoveChildIDs removes the "children" edge to Todo entities by IDs.
-func (tuo *TodoUpdateOne) RemoveChildIDs(ids ...pulid.ID) *TodoUpdateOne {
-	tuo.mutation.RemoveChildIDs(ids...)
-	return tuo
-}
-
-// RemoveChildren removes "children" edges to Todo entities.
-func (tuo *TodoUpdateOne) RemoveChildren(t ...*Todo) *TodoUpdateOne {
-	ids := make([]pulid.ID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tuo.RemoveChildIDs(ids...)
-}
-
-// ClearParent clears the "parent" edge to the Todo entity.
-func (tuo *TodoUpdateOne) ClearParent() *TodoUpdateOne {
-	tuo.mutation.ClearParent()
-	return tuo
-}
-
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (tuo *TodoUpdateOne) ClearUser() *TodoUpdateOne {
 	tuo.mutation.ClearUser()
 	return tuo
-}
-
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (tuo *TodoUpdateOne) RemoveUserIDs(ids ...pulid.ID) *TodoUpdateOne {
-	tuo.mutation.RemoveUserIDs(ids...)
-	return tuo
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (tuo *TodoUpdateOne) RemoveUser(u ...*User) *TodoUpdateOne {
-	ids := make([]pulid.ID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tuo.RemoveUserIDs(ids...)
 }
 
 // Where appends a list predicates to the TodoUpdate builder.
@@ -695,115 +461,25 @@ func (tuo *TodoUpdateOne) sqlSave(ctx context.Context) (_node *Todo, err error) 
 	if tuo.mutation.TimeCompletedCleared() {
 		_spec.ClearField(todo.FieldTimeCompleted, field.TypeTime)
 	}
-	if tuo.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !tuo.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if tuo.mutation.ParentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   todo.ParentTable,
-			Columns: []string{todo.ParentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.ParentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   todo.ParentTable,
-			Columns: []string{todo.ParentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if tuo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
+			Columns: []string{todo.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.RemovedUserIDs(); len(nodes) > 0 && !tuo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := tuo.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
+			Columns: []string{todo.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),

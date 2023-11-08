@@ -4,7 +4,6 @@ package generated
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/predicate"
 	"lkuoch/ent-todo/ent/generated/todo"
@@ -20,18 +19,14 @@ import (
 // TodoQuery is the builder for querying Todo entities.
 type TodoQuery struct {
 	config
-	ctx               *QueryContext
-	order             []todo.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.Todo
-	withChildren      *TodoQuery
-	withParent        *TodoQuery
-	withUser          *UserQuery
-	withFKs           bool
-	modifiers         []func(*sql.Selector)
-	loadTotal         []func(context.Context, []*Todo) error
-	withNamedChildren map[string]*TodoQuery
-	withNamedUser     map[string]*UserQuery
+	ctx        *QueryContext
+	order      []todo.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Todo
+	withUser   *UserQuery
+	withFKs    bool
+	modifiers  []func(*sql.Selector)
+	loadTotal  []func(context.Context, []*Todo) error
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -68,50 +63,6 @@ func (tq *TodoQuery) Order(o ...todo.OrderOption) *TodoQuery {
 	return tq
 }
 
-// QueryChildren chains the current query on the "children" edge.
-func (tq *TodoQuery) QueryChildren() *TodoQuery {
-	query := (&TodoClient{config: tq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := tq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(todo.Table, todo.FieldID, selector),
-			sqlgraph.To(todo.Table, todo.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, todo.ChildrenTable, todo.ChildrenColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryParent chains the current query on the "parent" edge.
-func (tq *TodoQuery) QueryParent() *TodoQuery {
-	query := (&TodoClient{config: tq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := tq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(todo.Table, todo.FieldID, selector),
-			sqlgraph.To(todo.Table, todo.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, todo.ParentTable, todo.ParentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryUser chains the current query on the "user" edge.
 func (tq *TodoQuery) QueryUser() *UserQuery {
 	query := (&UserClient{config: tq.config}).Query()
@@ -126,7 +77,7 @@ func (tq *TodoQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(todo.Table, todo.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, todo.UserTable, todo.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, todo.UserTable, todo.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -321,40 +272,16 @@ func (tq *TodoQuery) Clone() *TodoQuery {
 		return nil
 	}
 	return &TodoQuery{
-		config:       tq.config,
-		ctx:          tq.ctx.Clone(),
-		order:        append([]todo.OrderOption{}, tq.order...),
-		inters:       append([]Interceptor{}, tq.inters...),
-		predicates:   append([]predicate.Todo{}, tq.predicates...),
-		withChildren: tq.withChildren.Clone(),
-		withParent:   tq.withParent.Clone(),
-		withUser:     tq.withUser.Clone(),
+		config:     tq.config,
+		ctx:        tq.ctx.Clone(),
+		order:      append([]todo.OrderOption{}, tq.order...),
+		inters:     append([]Interceptor{}, tq.inters...),
+		predicates: append([]predicate.Todo{}, tq.predicates...),
+		withUser:   tq.withUser.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
 	}
-}
-
-// WithChildren tells the query-builder to eager-load the nodes that are connected to
-// the "children" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TodoQuery) WithChildren(opts ...func(*TodoQuery)) *TodoQuery {
-	query := (&TodoClient{config: tq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	tq.withChildren = query
-	return tq
-}
-
-// WithParent tells the query-builder to eager-load the nodes that are connected to
-// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TodoQuery) WithParent(opts ...func(*TodoQuery)) *TodoQuery {
-	query := (&TodoClient{config: tq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	tq.withParent = query
-	return tq
 }
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
@@ -447,13 +374,11 @@ func (tq *TodoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Todo, e
 		nodes       = []*Todo{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [3]bool{
-			tq.withChildren != nil,
-			tq.withParent != nil,
+		loadedTypes = [1]bool{
 			tq.withUser != nil,
 		}
 	)
-	if tq.withParent != nil {
+	if tq.withUser != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -480,37 +405,9 @@ func (tq *TodoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Todo, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tq.withChildren; query != nil {
-		if err := tq.loadChildren(ctx, query, nodes,
-			func(n *Todo) { n.Edges.Children = []*Todo{} },
-			func(n *Todo, e *Todo) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := tq.withParent; query != nil {
-		if err := tq.loadParent(ctx, query, nodes, nil,
-			func(n *Todo, e *Todo) { n.Edges.Parent = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := tq.withUser; query != nil {
-		if err := tq.loadUser(ctx, query, nodes,
-			func(n *Todo) { n.Edges.User = []*User{} },
-			func(n *Todo, e *User) { n.Edges.User = append(n.Edges.User, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range tq.withNamedChildren {
-		if err := tq.loadChildren(ctx, query, nodes,
-			func(n *Todo) { n.appendNamedChildren(name) },
-			func(n *Todo, e *Todo) { n.appendNamedChildren(name, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range tq.withNamedUser {
-		if err := tq.loadUser(ctx, query, nodes,
-			func(n *Todo) { n.appendNamedUser(name) },
-			func(n *Todo, e *User) { n.appendNamedUser(name, e) }); err != nil {
+		if err := tq.loadUser(ctx, query, nodes, nil,
+			func(n *Todo, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -522,45 +419,14 @@ func (tq *TodoQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Todo, e
 	return nodes, nil
 }
 
-func (tq *TodoQuery) loadChildren(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[pulid.ID]*Todo)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Todo(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(todo.ChildrenColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.todo_parent
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "todo_parent" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "todo_parent" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *Todo)) error {
+func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *User)) error {
 	ids := make([]pulid.ID, 0, len(nodes))
 	nodeids := make(map[pulid.ID][]*Todo)
 	for i := range nodes {
-		if nodes[i].todo_parent == nil {
+		if nodes[i].user_todos == nil {
 			continue
 		}
-		fk := *nodes[i].todo_parent
+		fk := *nodes[i].user_todos
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -569,7 +435,7 @@ func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(todo.IDIn(ids...))
+	query.Where(user.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -577,71 +443,10 @@ func (tq *TodoQuery) loadParent(ctx context.Context, query *TodoQuery, nodes []*
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "todo_parent" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_todos" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (tq *TodoQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Todo, init func(*Todo), assign func(*Todo, *User)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[pulid.ID]*Todo)
-	nids := make(map[pulid.ID]map[*Todo]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(todo.UserTable)
-		s.Join(joinT).On(s.C(user.FieldID), joinT.C(todo.UserPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(todo.UserPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(todo.UserPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(pulid.ID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*pulid.ID)
-				inValue := *values[1].(*pulid.ID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Todo]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*User](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "user" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
 		}
 	}
 	return nil
@@ -729,34 +534,6 @@ func (tq *TodoQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// WithNamedChildren tells the query-builder to eager-load the nodes that are connected to the "children"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (tq *TodoQuery) WithNamedChildren(name string, opts ...func(*TodoQuery)) *TodoQuery {
-	query := (&TodoClient{config: tq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if tq.withNamedChildren == nil {
-		tq.withNamedChildren = make(map[string]*TodoQuery)
-	}
-	tq.withNamedChildren[name] = query
-	return tq
-}
-
-// WithNamedUser tells the query-builder to eager-load the nodes that are connected to the "user"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (tq *TodoQuery) WithNamedUser(name string, opts ...func(*UserQuery)) *TodoQuery {
-	query := (&UserClient{config: tq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if tq.withNamedUser == nil {
-		tq.withNamedUser = make(map[string]*UserQuery)
-	}
-	tq.withNamedUser[name] = query
-	return tq
 }
 
 // TodoGroupBy is the group-by builder for Todo entities.

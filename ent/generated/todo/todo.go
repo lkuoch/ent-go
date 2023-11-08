@@ -30,27 +30,17 @@ const (
 	FieldStatus = "status"
 	// FieldTimeCompleted holds the string denoting the time_completed field in the database.
 	FieldTimeCompleted = "time_completed"
-	// EdgeChildren holds the string denoting the children edge name in mutations.
-	EdgeChildren = "children"
-	// EdgeParent holds the string denoting the parent edge name in mutations.
-	EdgeParent = "parent"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the todo in the database.
 	Table = "todo"
-	// ChildrenTable is the table that holds the children relation/edge.
-	ChildrenTable = "todo"
-	// ChildrenColumn is the table column denoting the children relation/edge.
-	ChildrenColumn = "todo_parent"
-	// ParentTable is the table that holds the parent relation/edge.
-	ParentTable = "todo"
-	// ParentColumn is the table column denoting the parent relation/edge.
-	ParentColumn = "todo_parent"
-	// UserTable is the table that holds the user relation/edge. The primary key declared below.
-	UserTable = "user_todos"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "todo"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "user"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_todos"
 )
 
 // Columns holds all SQL columns for todo fields.
@@ -67,14 +57,8 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "todo"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"todo_parent",
+	"user_todos",
 }
-
-var (
-	// UserPrimaryKey and UserColumn2 are the table columns denoting the
-	// primary key for the user relation (M2M).
-	UserPrimaryKey = []string{"user_id", "todo_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -196,59 +180,17 @@ func ByTimeCompleted(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTimeCompleted, opts...).ToFunc()
 }
 
-// ByChildrenCount orders the results by children count.
-func ByChildrenCount(opts ...sql.OrderTermOption) OrderOption {
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChildrenStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
-}
-
-// ByChildren orders the results by children terms.
-func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChildrenStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByParentField orders the results by parent field.
-func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newParentStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByUserCount orders the results by user count.
-func ByUserCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUserStep(), opts...)
-	}
-}
-
-// ByUser orders the results by user terms.
-func ByUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newChildrenStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(Table, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, ChildrenTable, ChildrenColumn),
-	)
-}
-func newParentStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(Table, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, ParentTable, ParentColumn),
-	)
 }
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }
 

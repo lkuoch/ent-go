@@ -112,53 +112,23 @@ func (tc *TodoCreate) SetNillableID(pu *pulid.ID) *TodoCreate {
 	return tc
 }
 
-// AddChildIDs adds the "children" edge to the Todo entity by IDs.
-func (tc *TodoCreate) AddChildIDs(ids ...pulid.ID) *TodoCreate {
-	tc.mutation.AddChildIDs(ids...)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (tc *TodoCreate) SetUserID(id pulid.ID) *TodoCreate {
+	tc.mutation.SetUserID(id)
 	return tc
 }
 
-// AddChildren adds the "children" edges to the Todo entity.
-func (tc *TodoCreate) AddChildren(t ...*Todo) *TodoCreate {
-	ids := make([]pulid.ID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tc.AddChildIDs(ids...)
-}
-
-// SetParentID sets the "parent" edge to the Todo entity by ID.
-func (tc *TodoCreate) SetParentID(id pulid.ID) *TodoCreate {
-	tc.mutation.SetParentID(id)
-	return tc
-}
-
-// SetNillableParentID sets the "parent" edge to the Todo entity by ID if the given value is not nil.
-func (tc *TodoCreate) SetNillableParentID(id *pulid.ID) *TodoCreate {
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (tc *TodoCreate) SetNillableUserID(id *pulid.ID) *TodoCreate {
 	if id != nil {
-		tc = tc.SetParentID(*id)
+		tc = tc.SetUserID(*id)
 	}
 	return tc
 }
 
-// SetParent sets the "parent" edge to the Todo entity.
-func (tc *TodoCreate) SetParent(t *Todo) *TodoCreate {
-	return tc.SetParentID(t.ID)
-}
-
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (tc *TodoCreate) AddUserIDs(ids ...pulid.ID) *TodoCreate {
-	tc.mutation.AddUserIDs(ids...)
-	return tc
-}
-
-// AddUser adds the "user" edges to the User entity.
-func (tc *TodoCreate) AddUser(u ...*User) *TodoCreate {
-	ids := make([]pulid.ID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tc.AddUserIDs(ids...)
+// SetUser sets the "user" edge to the User entity.
+func (tc *TodoCreate) SetUser(u *User) *TodoCreate {
+	return tc.SetUserID(u.ID)
 }
 
 // Mutation returns the TodoMutation object of the builder.
@@ -309,45 +279,12 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 		_spec.SetField(todo.FieldTimeCompleted, field.TypeTime, value)
 		_node.TimeCompleted = &value
 	}
-	if nodes := tc.mutation.ChildrenIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   todo.ChildrenTable,
-			Columns: []string{todo.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ParentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   todo.ParentTable,
-			Columns: []string{todo.ParentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(todo.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.todo_parent = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   todo.UserTable,
-			Columns: todo.UserPrimaryKey,
+			Columns: []string{todo.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
@@ -356,6 +293,7 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.user_todos = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

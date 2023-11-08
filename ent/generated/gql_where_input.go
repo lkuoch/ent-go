@@ -88,14 +88,6 @@ type TodoWhereInput struct {
 	TimeCompletedIsNil  bool        `json:"timeCompletedIsNil,omitempty"`
 	TimeCompletedNotNil bool        `json:"timeCompletedNotNil,omitempty"`
 
-	// "children" edge predicates.
-	HasChildren     *bool             `json:"hasChildren,omitempty"`
-	HasChildrenWith []*TodoWhereInput `json:"hasChildrenWith,omitempty"`
-
-	// "parent" edge predicates.
-	HasParent     *bool             `json:"hasParent,omitempty"`
-	HasParentWith []*TodoWhereInput `json:"hasParentWith,omitempty"`
-
 	// "user" edge predicates.
 	HasUser     *bool             `json:"hasUser,omitempty"`
 	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
@@ -338,42 +330,6 @@ func (i *TodoWhereInput) P() (predicate.Todo, error) {
 		predicates = append(predicates, todo.TimeCompletedNotNil())
 	}
 
-	if i.HasChildren != nil {
-		p := todo.HasChildren()
-		if !*i.HasChildren {
-			p = todo.Not(p)
-		}
-		predicates = append(predicates, p)
-	}
-	if len(i.HasChildrenWith) > 0 {
-		with := make([]predicate.Todo, 0, len(i.HasChildrenWith))
-		for _, w := range i.HasChildrenWith {
-			p, err := w.P()
-			if err != nil {
-				return nil, fmt.Errorf("%w: field 'HasChildrenWith'", err)
-			}
-			with = append(with, p)
-		}
-		predicates = append(predicates, todo.HasChildrenWith(with...))
-	}
-	if i.HasParent != nil {
-		p := todo.HasParent()
-		if !*i.HasParent {
-			p = todo.Not(p)
-		}
-		predicates = append(predicates, p)
-	}
-	if len(i.HasParentWith) > 0 {
-		with := make([]predicate.Todo, 0, len(i.HasParentWith))
-		for _, w := range i.HasParentWith {
-			p, err := w.P()
-			if err != nil {
-				return nil, fmt.Errorf("%w: field 'HasParentWith'", err)
-			}
-			with = append(with, p)
-		}
-		predicates = append(predicates, todo.HasParentWith(with...))
-	}
 	if i.HasUser != nil {
 		p := todo.HasUser()
 		if !*i.HasUser {

@@ -1,5 +1,5 @@
 # All custom graphql definitions go here.
-# Types from `ent-schema.graphql` are referenced here
+# Types from `ent.graphql` are referenced here
 
 type Mutation {
   createTodo(input: CreateTodoInput!): Todo

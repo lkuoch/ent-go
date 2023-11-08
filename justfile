@@ -13,7 +13,7 @@ generate:
   go generate .
 
 regenerate:
-  rm -rf ./ent-schema.graphql ./ent/generated && just generate
+  rm -rf ./ent.graphql ./ent/generated && just generate
 
 migrate-create:
   atlas migrate diff migration_name \

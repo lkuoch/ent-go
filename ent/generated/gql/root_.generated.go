@@ -10,6 +10,7 @@ import (
 	"lkuoch/ent-todo/ent/schema/types/pulid"
 	"sync/atomic"
 
+	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -57,21 +58,30 @@ type ComplexityRoot struct {
 	Query struct {
 		Node  func(childComplexity int, id pulid.ID) int
 		Nodes func(childComplexity int, ids []pulid.ID) int
-		Todos func(childComplexity int) int
-		Users func(childComplexity int) int
+		Todos func(childComplexity int, after *entgql.Cursor[pulid.ID], first *int, before *entgql.Cursor[pulid.ID], last *int, orderBy []*generated.TodoOrder, where *generated.TodoWhereInput) int
+		Users func(childComplexity int, after *entgql.Cursor[pulid.ID], first *int, before *entgql.Cursor[pulid.ID], last *int, orderBy []*generated.UserOrder, where *generated.UserWhereInput) int
 	}
 
 	Todo struct {
-		Children      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
-		Parent        func(childComplexity int) int
 		Priority      func(childComplexity int) int
 		Status        func(childComplexity int) int
 		TimeCompleted func(childComplexity int) int
 		Title         func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 		User          func(childComplexity int) int
+	}
+
+	TodoConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	TodoEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	User struct {
@@ -81,6 +91,17 @@ type ComplexityRoot struct {
 		Todos       func(childComplexity int) int
 		UpdatedAt   func(childComplexity int) int
 		Username    func(childComplexity int) int
+	}
+
+	UserConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	UserEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 }
 
@@ -184,21 +205,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Todos(childComplexity), true
+		args, err := ec.field_Query_todos_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Todos(childComplexity, args["after"].(*entgql.Cursor[pulid.ID]), args["first"].(*int), args["before"].(*entgql.Cursor[pulid.ID]), args["last"].(*int), args["orderBy"].([]*generated.TodoOrder), args["where"].(*generated.TodoWhereInput)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
 			break
 		}
 
-		return e.complexity.Query.Users(childComplexity), true
-
-	case "Todo.children":
-		if e.complexity.Todo.Children == nil {
-			break
+		args, err := ec.field_Query_users_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
 		}
 
-		return e.complexity.Todo.Children(childComplexity), true
+		return e.complexity.Query.Users(childComplexity, args["after"].(*entgql.Cursor[pulid.ID]), args["first"].(*int), args["before"].(*entgql.Cursor[pulid.ID]), args["last"].(*int), args["orderBy"].([]*generated.UserOrder), args["where"].(*generated.UserWhereInput)), true
 
 	case "Todo.createdAt":
 		if e.complexity.Todo.CreatedAt == nil {
@@ -213,13 +237,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Todo.ID(childComplexity), true
-
-	case "Todo.parent":
-		if e.complexity.Todo.Parent == nil {
-			break
-		}
-
-		return e.complexity.Todo.Parent(childComplexity), true
 
 	case "Todo.priority":
 		if e.complexity.Todo.Priority == nil {
@@ -263,6 +280,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Todo.User(childComplexity), true
 
+	case "TodoConnection.edges":
+		if e.complexity.TodoConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.TodoConnection.Edges(childComplexity), true
+
+	case "TodoConnection.pageInfo":
+		if e.complexity.TodoConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.TodoConnection.PageInfo(childComplexity), true
+
+	case "TodoConnection.totalCount":
+		if e.complexity.TodoConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.TodoConnection.TotalCount(childComplexity), true
+
+	case "TodoEdge.cursor":
+		if e.complexity.TodoEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.TodoEdge.Cursor(childComplexity), true
+
+	case "TodoEdge.node":
+		if e.complexity.TodoEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.TodoEdge.Node(childComplexity), true
+
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
 			break
@@ -305,6 +357,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Username(childComplexity), true
 
+	case "UserConnection.edges":
+		if e.complexity.UserConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.Edges(childComplexity), true
+
+	case "UserConnection.pageInfo":
+		if e.complexity.UserConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.PageInfo(childComplexity), true
+
+	case "UserConnection.totalCount":
+		if e.complexity.UserConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.UserConnection.TotalCount(childComplexity), true
+
+	case "UserEdge.cursor":
+		if e.complexity.UserEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.UserEdge.Cursor(childComplexity), true
+
+	case "UserEdge.node":
+		if e.complexity.UserEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.UserEdge.Node(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -315,7 +402,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCreateTodoInput,
 		ec.unmarshalInputCreateUserInput,
+		ec.unmarshalInputTodoOrder,
 		ec.unmarshalInputTodoWhereInput,
+		ec.unmarshalInputUpdateTodoInput,
+		ec.unmarshalInputUpdateUserInput,
+		ec.unmarshalInputUserOrder,
 		ec.unmarshalInputUserWhereInput,
 	)
 	first := true
@@ -414,7 +505,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../../ent-schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+	{Name: "../../../ent.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 """
 CreateTodoInput is used for create Todo object.
@@ -427,9 +518,7 @@ input CreateTodoInput {
   priority: TodoPriority
   status: TodoStatus
   timeCompleted: Time
-  childIDs: [ID!]
-  parentID: ID
-  userIDs: [ID!]
+  userID: ID
 }
 """
 CreateUserInput is used for create User object.
@@ -487,8 +576,44 @@ type Query {
     """The list of node IDs."""
     ids: [ID!]!
   ): [Node]!
-  todos: [Todo!]!
-  users: [User!]!
+  todos(
+    """Returns the elements in the list that come after the specified cursor."""
+    after: Cursor
+
+    """Returns the first _n_ elements from the list."""
+    first: Int
+
+    """Returns the elements in the list that come before the specified cursor."""
+    before: Cursor
+
+    """Returns the last _n_ elements from the list."""
+    last: Int
+
+    """Ordering options for Todos returned from the connection."""
+    orderBy: [TodoOrder!]
+
+    """Filtering options for Todos returned from the connection."""
+    where: TodoWhereInput
+  ): TodoConnection!
+  users(
+    """Returns the elements in the list that come after the specified cursor."""
+    after: Cursor
+
+    """Returns the first _n_ elements from the list."""
+    first: Int
+
+    """Returns the elements in the list that come before the specified cursor."""
+    before: Cursor
+
+    """Returns the last _n_ elements from the list."""
+    last: Int
+
+    """Ordering options for Users returned from the connection."""
+    orderBy: [UserOrder!]
+
+    """Filtering options for Users returned from the connection."""
+    where: UserWhereInput
+  ): UserConnection!
 }
 """The builtin Time type"""
 scalar Time
@@ -500,9 +625,37 @@ type Todo implements Node {
   priority: TodoPriority!
   status: TodoStatus!
   timeCompleted: Time
-  children: [Todo!]
-  parent: Todo
-  user: [User!]
+  user: User
+}
+"""A connection to a list of items."""
+type TodoConnection {
+  """A list of edges."""
+  edges: [TodoEdge]
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+  """Identifies the total count of items in the connection."""
+  totalCount: Int!
+}
+"""An edge in a connection."""
+type TodoEdge {
+  """The item at the end of the edge."""
+  node: Todo
+  """A cursor for use in pagination."""
+  cursor: Cursor!
+}
+"""Ordering options for Todo connections"""
+input TodoOrder {
+  """The ordering direction."""
+  direction: OrderDirection! = ASC
+  """The field by which to order Todos."""
+  field: TodoOrderField!
+}
+"""Properties by which Todo connections can be ordered."""
+enum TodoOrderField {
+  ID
+  CREATED_AT
+  UPDATED_AT
+  TITLE
 }
 """TodoPriority is enum for the field priority"""
 enum TodoPriority @goModel(model: "lkuoch/ent-todo/ent/generated/todo.Priority") {
@@ -586,15 +739,35 @@ input TodoWhereInput {
   timeCompletedLTE: Time
   timeCompletedIsNil: Boolean
   timeCompletedNotNil: Boolean
-  """children edge predicates"""
-  hasChildren: Boolean
-  hasChildrenWith: [TodoWhereInput!]
-  """parent edge predicates"""
-  hasParent: Boolean
-  hasParentWith: [TodoWhereInput!]
   """user edge predicates"""
   hasUser: Boolean
   hasUserWith: [UserWhereInput!]
+}
+"""
+UpdateTodoInput is used for update Todo object.
+Input was generated by ent.
+"""
+input UpdateTodoInput {
+  updatedAt: Time
+  title: String
+  priority: TodoPriority
+  status: TodoStatus
+  timeCompleted: Time
+  clearTimeCompleted: Boolean
+  userID: ID
+  clearUser: Boolean
+}
+"""
+UpdateUserInput is used for update User object.
+Input was generated by ent.
+"""
+input UpdateUserInput {
+  updatedAt: Time
+  username: String
+  displayName: String
+  addTodoIDs: [ID!]
+  removeTodoIDs: [ID!]
+  clearTodos: Boolean
 }
 type User implements Node {
   id: ID!
@@ -603,6 +776,35 @@ type User implements Node {
   username: String!
   displayName: String!
   todos: [Todo!]
+}
+"""A connection to a list of items."""
+type UserConnection {
+  """A list of edges."""
+  edges: [UserEdge]
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+  """Identifies the total count of items in the connection."""
+  totalCount: Int!
+}
+"""An edge in a connection."""
+type UserEdge {
+  """The item at the end of the edge."""
+  node: User
+  """A cursor for use in pagination."""
+  cursor: Cursor!
+}
+"""Ordering options for User connections"""
+input UserOrder {
+  """The ordering direction."""
+  direction: OrderDirection! = ASC
+  """The field by which to order Users."""
+  field: UserOrderField!
+}
+"""Properties by which User connections can be ordered."""
+enum UserOrderField {
+  ID
+  CREATED_AT
+  UPDATED_AT
 }
 """
 UserWhereInput is used for filtering User objects.
@@ -673,7 +875,7 @@ input UserWhereInput {
 }
 `, BuiltIn: false},
 	{Name: "../../../typedef.graphql", Input: `# All custom graphql definitions go here.
-# Types from ` + "`" + `ent-schema.graphql` + "`" + ` are referenced here
+# Types from ` + "`" + `ent.graphql` + "`" + ` are referenced here
 
 type Mutation {
   createTodo(input: CreateTodoInput!): Todo

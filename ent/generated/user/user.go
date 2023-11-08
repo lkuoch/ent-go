@@ -27,11 +27,13 @@ const (
 	EdgeTodos = "todos"
 	// Table holds the table name of the user in the database.
 	Table = "user"
-	// TodosTable is the table that holds the todos relation/edge. The primary key declared below.
-	TodosTable = "user_todos"
+	// TodosTable is the table that holds the todos relation/edge.
+	TodosTable = "todo"
 	// TodosInverseTable is the table name for the Todo entity.
 	// It exists in this package in order to avoid circular dependency with the "todo" package.
 	TodosInverseTable = "todo"
+	// TodosColumn is the table column denoting the todos relation/edge.
+	TodosColumn = "user_todos"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -42,12 +44,6 @@ var Columns = []string{
 	FieldUsername,
 	FieldDisplayName,
 }
-
-var (
-	// TodosPrimaryKey and TodosColumn2 are the table columns denoting the
-	// primary key for the todos relation (M2M).
-	TodosPrimaryKey = []string{"user_id", "todo_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -119,6 +115,6 @@ func newTodosStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TodosInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, TodosTable, TodosPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, TodosTable, TodosColumn),
 	)
 }

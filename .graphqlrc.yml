@@ -1,2 +1,2 @@
-schema: "./ent-schema.graphql"
+schema: "./ent.graphql"
 include: "./typedef.graphql"

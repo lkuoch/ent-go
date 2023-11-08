@@ -18,7 +18,7 @@ var (
 		{Name: "priority", Type: field.TypeEnum, Enums: []string{"HIGH", "MEDIUM", "LOW", "NONE"}, Default: "NONE"},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"IN_PROGRESS", "COMPLETED"}, Default: "IN_PROGRESS"},
 		{Name: "time_completed", Type: field.TypeTime, Nullable: true},
-		{Name: "todo_parent", Type: field.TypeString, Nullable: true},
+		{Name: "user_todos", Type: field.TypeString, Nullable: true},
 	}
 	// TodoTable holds the schema information for the "todo" table.
 	TodoTable = &schema.Table{
@@ -27,9 +27,9 @@ var (
 		PrimaryKey: []*schema.Column{TodoColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "todo_todo_parent",
+				Symbol:     "todo_user_todos",
 				Columns:    []*schema.Column{TodoColumns[7]},
-				RefColumns: []*schema.Column{TodoColumns[0]},
+				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -67,47 +67,19 @@ var (
 			},
 		},
 	}
-	// UserTodosColumns holds the columns for the "user_todos" table.
-	UserTodosColumns = []*schema.Column{
-		{Name: "user_id", Type: field.TypeString},
-		{Name: "todo_id", Type: field.TypeString},
-	}
-	// UserTodosTable holds the schema information for the "user_todos" table.
-	UserTodosTable = &schema.Table{
-		Name:       "user_todos",
-		Columns:    UserTodosColumns,
-		PrimaryKey: []*schema.Column{UserTodosColumns[0], UserTodosColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "user_todos_user_id",
-				Columns:    []*schema.Column{UserTodosColumns[0]},
-				RefColumns: []*schema.Column{UserColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "user_todos_todo_id",
-				Columns:    []*schema.Column{UserTodosColumns[1]},
-				RefColumns: []*schema.Column{TodoColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		TodoTable,
 		UserTable,
-		UserTodosTable,
 	}
 )
 
 func init() {
-	TodoTable.ForeignKeys[0].RefTable = TodoTable
+	TodoTable.ForeignKeys[0].RefTable = UserTable
 	TodoTable.Annotation = &entsql.Annotation{
 		Table: "todo",
 	}
 	UserTable.Annotation = &entsql.Annotation{
 		Table: "user",
 	}
-	UserTodosTable.ForeignKeys[0].RefTable = UserTable
-	UserTodosTable.ForeignKeys[1].RefTable = TodoTable
 }

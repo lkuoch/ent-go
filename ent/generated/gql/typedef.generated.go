@@ -112,10 +112,6 @@ func (ec *executionContext) fieldContext_Mutation_createTodo(ctx context.Context
 				return ec.fieldContext_Todo_status(ctx, field)
 			case "timeCompleted":
 				return ec.fieldContext_Todo_timeCompleted(ctx, field)
-			case "children":
-				return ec.fieldContext_Todo_children(ctx, field)
-			case "parent":
-				return ec.fieldContext_Todo_parent(ctx, field)
 			case "user":
 				return ec.fieldContext_Todo_user(ctx, field)
 			}

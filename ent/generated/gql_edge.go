@@ -8,36 +8,12 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-func (t *Todo) Children(ctx context.Context) (result []*Todo, err error) {
-	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
-		result, err = t.NamedChildren(graphql.GetFieldContext(ctx).Field.Alias)
-	} else {
-		result, err = t.Edges.ChildrenOrErr()
-	}
+func (t *Todo) User(ctx context.Context) (*User, error) {
+	result, err := t.Edges.UserOrErr()
 	if IsNotLoaded(err) {
-		result, err = t.QueryChildren().All(ctx)
-	}
-	return result, err
-}
-
-func (t *Todo) Parent(ctx context.Context) (*Todo, error) {
-	result, err := t.Edges.ParentOrErr()
-	if IsNotLoaded(err) {
-		result, err = t.QueryParent().Only(ctx)
+		result, err = t.QueryUser().Only(ctx)
 	}
 	return result, MaskNotFound(err)
-}
-
-func (t *Todo) User(ctx context.Context) (result []*User, err error) {
-	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
-		result, err = t.NamedUser(graphql.GetFieldContext(ctx).Field.Alias)
-	} else {
-		result, err = t.Edges.UserOrErr()
-	}
-	if IsNotLoaded(err) {
-		result, err = t.QueryUser().All(ctx)
-	}
-	return result, err
 }
 
 func (u *User) Todos(ctx context.Context) (result []*Todo, err error) {

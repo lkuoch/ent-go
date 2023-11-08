@@ -9,6 +9,8 @@ import (
 	"lkuoch/ent-todo/ent/generated"
 	"lkuoch/ent-todo/ent/generated/gql"
 	"lkuoch/ent-todo/ent/schema/types/pulid"
+
+	"entgo.io/contrib/entgql"
 )
 
 // Node is the resolver for the node field.
@@ -22,13 +24,19 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []pulid.ID) ([]generated.
 }
 
 // Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*generated.Todo, error) {
-	return r.client.Todo.Query().All(ctx)
+func (r *queryResolver) Todos(ctx context.Context, after *entgql.Cursor[pulid.ID], first *int, before *entgql.Cursor[pulid.ID], last *int, orderBy []*generated.TodoOrder, where *generated.TodoWhereInput) (*generated.TodoConnection, error) {
+	return r.client.Todo.Query().
+		Paginate(ctx, after, first, before, last,
+			generated.WithTodoOrder(orderBy),
+		)
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context) ([]*generated.User, error) {
-	return r.client.User.Query().All(ctx)
+func (r *queryResolver) Users(ctx context.Context, after *entgql.Cursor[pulid.ID], first *int, before *entgql.Cursor[pulid.ID], last *int, orderBy []*generated.UserOrder, where *generated.UserWhereInput) (*generated.UserConnection, error) {
+	return r.client.User.Query().
+		Paginate(ctx, after, first, before, last,
+			generated.WithUserOrder(orderBy),
+		)
 }
 
 // Query returns gql.QueryResolver implementation.
