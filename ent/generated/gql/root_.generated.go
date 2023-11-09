@@ -88,7 +88,7 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		DisplayName func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Todos       func(childComplexity int) int
+		Todos       func(childComplexity int, after *entgql.Cursor[pulid.ID], first *int, before *entgql.Cursor[pulid.ID], last *int, orderBy []*generated.TodoOrder, where *generated.TodoWhereInput) int
 		UpdatedAt   func(childComplexity int) int
 		Username    func(childComplexity int) int
 	}
@@ -341,7 +341,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.User.Todos(childComplexity), true
+		args, err := ec.field_User_todos_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.Todos(childComplexity, args["after"].(*entgql.Cursor[pulid.ID]), args["first"].(*int), args["before"].(*entgql.Cursor[pulid.ID]), args["last"].(*int), args["orderBy"].([]*generated.TodoOrder), args["where"].(*generated.TodoWhereInput)), true
 
 	case "User.updatedAt":
 		if e.complexity.User.UpdatedAt == nil {
@@ -625,6 +630,7 @@ type Todo implements Node {
   priority: TodoPriority!
   status: TodoStatus!
   timeCompleted: Time
+  """Todo belongs to single User"""
   user: User
 }
 """A connection to a list of items."""
@@ -775,7 +781,25 @@ type User implements Node {
   updatedAt: Time!
   username: String!
   displayName: String!
-  todos: [Todo!]
+  todos(
+    """Returns the elements in the list that come after the specified cursor."""
+    after: Cursor
+
+    """Returns the first _n_ elements from the list."""
+    first: Int
+
+    """Returns the elements in the list that come before the specified cursor."""
+    before: Cursor
+
+    """Returns the last _n_ elements from the list."""
+    last: Int
+
+    """Ordering options for Todos returned from the connection."""
+    orderBy: [TodoOrder!]
+
+    """Filtering options for Todos returned from the connection."""
+    where: TodoWhereInput
+  ): TodoConnection!
 }
 """A connection to a list of items."""
 type UserConnection {

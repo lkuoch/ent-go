@@ -34,7 +34,7 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Todos holds the value of the todos edge.
+	// User owns multiple Todos
 	Todos []*Todo `json:"todos,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.

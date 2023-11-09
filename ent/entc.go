@@ -28,9 +28,12 @@ func main() {
 	}
 
 	if err := entc.Generate("./ent/schema", &gen.Config{
-		Target:   "./ent/generated",
-		Package:  "lkuoch/ent-todo/ent/generated",
-		Features: []gen.Feature{gen.FeatureVersionedMigration},
+		Target:  "./ent/generated",
+		Package: "lkuoch/ent-todo/ent/generated",
+		Features: []gen.Feature{
+			gen.FeatureVersionedMigration,
+			gen.FeatureUpsert,
+		},
 		Templates: []*gen.Template{
 			gen.MustParse(gen.NewTemplate("pulid").ParseFiles("./ent/schema/templates/pulid.tmpl")),
 		},

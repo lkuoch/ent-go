@@ -47,11 +47,10 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		// Uesr can have multiple todos
-		edge.To("todos", Todo.Type),
-
-		// TODO: Figure out connection
-		// Annotations(entgql.RelayConnection()),
+		// User can have multiple todos
+		edge.To("todos", Todo.Type).
+			Annotations(entgql.RelayConnection()).
+			Comment("User owns multiple Todos"),
 	}
 }
 

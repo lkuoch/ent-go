@@ -1,0 +1,110 @@
+@base_url=http://localhost:8081/query
+@timestamp={{$timestamp}}
+
+### Create User
+# @name CreateUserMutation
+POST {{base_url}}
+Content-Type: application/json
+X-REQUEST-TYPE: GraphQL
+
+mutation CreateUser($username: String!, $displayName: String!) {
+  createUser(input: {username: $username, displayName: $displayName}) {
+    id
+    createdAt
+  }
+}
+
+{
+  "username": "U-{{timestamp}}",
+  "displayName": "Display Name"
+}
+
+### Create Todo
+# @name CreateTodoMutation
+POST {{base_url}}
+Content-Type: application/json
+X-REQUEST-TYPE: GraphQL
+
+mutation CreateTodo($userID: ID!, $title: String!) {
+  createTodo(
+    input: {userID: $userID, title: $title, priority: HIGH, status: IN_PROGRESS}
+  ) {
+    id
+    title
+  }
+}
+
+{
+  "userID": "{{CreateUserMutation.response.body.data.createUser.id}}",
+  "title": "T-{{timestamp}}"
+}
+
+### Node interface
+POST {{base_url}}
+Content-Type: application/json
+X-REQUEST-TYPE: GraphQL
+
+query Node($id: ID!) {
+  node(id: $id) {
+    ... on Todo {
+      __typename
+      id
+      title
+    }
+    ... on User {
+      id
+      username
+      createdAt
+      displayName
+      todos {
+        edges {
+          node {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+{
+  "id": "{{CreateTodoMutation.response.body.data.createTodo.id}}"
+}
+
+### Query All
+POST {{base_url}}
+Content-Type: application/json
+X-REQUEST-TYPE: GraphQL
+
+query Queries {
+  todos {
+    edges {
+      node {
+        id
+        title
+        user {
+          displayName
+        }
+      }
+    }
+  }
+  users {
+    edges {
+      node {
+        id
+        username
+        displayName
+        todos {
+          edges {
+            node {
+              id
+              title
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

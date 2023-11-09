@@ -70,7 +70,8 @@ func (Todo) Edges() []ent.Edge {
 		// A todo can belong to only one user
 		edge.From("user", User.Type).
 			Ref("todos").
-			Unique(),
+			Unique().
+			Comment("Todo belongs to single User"),
 	}
 }
 

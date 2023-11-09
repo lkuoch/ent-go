@@ -7,7 +7,8 @@
 
 ## Development flow:
 
-1. `just generate`
+0. `just migrate-run`
+1. `just regenerate`
    - Needed when changing schema files
 2. `just run`
    - Spins up graphql server

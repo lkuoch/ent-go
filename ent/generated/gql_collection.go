@@ -4,8 +4,11 @@ package generated
 
 import (
 	"context"
+	"database/sql/driver"
+	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
+	"lkuoch/ent-todo/ent/schema/types/pulid"
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect/sql"
@@ -169,8 +172,80 @@ func (u *UserQuery) collectField(ctx context.Context, opCtx *graphql.OperationCo
 				path  = append(path, alias)
 				query = (&TodoClient{config: u.config}).Query()
 			)
-			if err := query.collectField(ctx, opCtx, field, path, satisfies...); err != nil {
+			args := newTodoPaginateArgs(fieldArgs(ctx, new(TodoWhereInput), path...))
+			if err := validateFirstLast(args.first, args.last); err != nil {
+				return fmt.Errorf("validate first and last in path %q: %w", path, err)
+			}
+			pager, err := newTodoPager(args.opts, args.last != nil)
+			if err != nil {
+				return fmt.Errorf("create new pager in path %q: %w", path, err)
+			}
+			if query, err = pager.applyFilter(query); err != nil {
 				return err
+			}
+			ignoredEdges := !hasCollectedField(ctx, append(path, edgesField)...)
+			if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
+				hasPagination := args.after != nil || args.first != nil || args.before != nil || args.last != nil
+				if hasPagination || ignoredEdges {
+					query := query.Clone()
+					u.loadTotal = append(u.loadTotal, func(ctx context.Context, nodes []*User) error {
+						ids := make([]driver.Value, len(nodes))
+						for i := range nodes {
+							ids[i] = nodes[i].ID
+						}
+						var v []struct {
+							NodeID pulid.ID `sql:"user_todos"`
+							Count  int      `sql:"count"`
+						}
+						query.Where(func(s *sql.Selector) {
+							s.Where(sql.InValues(s.C(user.TodosColumn), ids...))
+						})
+						if err := query.GroupBy(user.TodosColumn).Aggregate(Count()).Scan(ctx, &v); err != nil {
+							return err
+						}
+						m := make(map[pulid.ID]int, len(v))
+						for i := range v {
+							m[v[i].NodeID] = v[i].Count
+						}
+						for i := range nodes {
+							n := m[nodes[i].ID]
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				} else {
+					u.loadTotal = append(u.loadTotal, func(_ context.Context, nodes []*User) error {
+						for i := range nodes {
+							n := len(nodes[i].Edges.Todos)
+							if nodes[i].Edges.totalCount[0] == nil {
+								nodes[i].Edges.totalCount[0] = make(map[string]int)
+							}
+							nodes[i].Edges.totalCount[0][alias] = n
+						}
+						return nil
+					})
+				}
+			}
+			if ignoredEdges || (args.first != nil && *args.first == 0) || (args.last != nil && *args.last == 0) {
+				continue
+			}
+			if query, err = pager.applyCursors(query, args.after, args.before); err != nil {
+				return err
+			}
+			path = append(path, edgesField, nodeField)
+			if field := collectedField(ctx, path...); field != nil {
+				if err := query.collectField(ctx, opCtx, *field, path, mayAddCondition(satisfies, "Todo")...); err != nil {
+					return err
+				}
+			}
+			if limit := paginateLimit(args.first, args.last); limit > 0 {
+				modify := limitRows(user.TodosColumn, limit, pager.orderExpr(query))
+				query.modifiers = append(query.modifiers, modify)
+			} else {
+				query = pager.applyOrder(query)
 			}
 			u.WithNamedTodos(alias, func(wq *TodoQuery) {
 				*wq = *query
