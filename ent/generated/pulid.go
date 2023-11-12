@@ -5,19 +5,21 @@ package generated
 import (
 	"context"
 	"fmt"
+	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 )
 
 // Map of prefix hash to table name
-var prefixMap = map[pulid.ID]string{
+var prefixMap = map[types.ID]string{
+	"d9603bef07a9524c": task.Table,
 	"2fbed1ef388301dd": todo.Table,
 	"7d6780e4032b48f2": user.Table,
 }
 
 // Resolver for node interface
-func IDToType(_ context.Context, id pulid.ID) (string, error) {
+func IDToType(_ context.Context, id types.ID) (string, error) {
 	prefixLength := 16
 
 	if len(id) < prefixLength {

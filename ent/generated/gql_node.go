@@ -5,9 +5,10 @@ package generated
 import (
 	"context"
 	"fmt"
+	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 
 	"entgo.io/contrib/entgql"
 	"github.com/99designs/gqlgen/graphql"
@@ -18,6 +19,9 @@ import (
 type Noder interface {
 	IsNode()
 }
+
+// IsNode implements the Node interface check for GQLGen.
+func (n *Task) IsNode() {}
 
 // IsNode implements the Node interface check for GQLGen.
 func (n *Todo) IsNode() {}
@@ -33,7 +37,7 @@ type NodeOption func(*nodeOptions)
 // WithNodeType sets the node Type resolver function (i.e. the table to query).
 // If was not provided, the table will be derived from the universal-id
 // configuration as described in: https://entgo.io/docs/migrate/#universal-ids.
-func WithNodeType(f func(context.Context, pulid.ID) (string, error)) NodeOption {
+func WithNodeType(f func(context.Context, types.ID) (string, error)) NodeOption {
 	return func(o *nodeOptions) {
 		o.nodeType = f
 	}
@@ -41,13 +45,13 @@ func WithNodeType(f func(context.Context, pulid.ID) (string, error)) NodeOption 
 
 // WithFixedNodeType sets the Type of the node to a fixed value.
 func WithFixedNodeType(t string) NodeOption {
-	return WithNodeType(func(context.Context, pulid.ID) (string, error) {
+	return WithNodeType(func(context.Context, types.ID) (string, error) {
 		return t, nil
 	})
 }
 
 type nodeOptions struct {
-	nodeType func(context.Context, pulid.ID) (string, error)
+	nodeType func(context.Context, types.ID) (string, error)
 }
 
 func (c *Client) newNodeOpts(opts []NodeOption) *nodeOptions {
@@ -56,7 +60,7 @@ func (c *Client) newNodeOpts(opts []NodeOption) *nodeOptions {
 		opt(nopts)
 	}
 	if nopts.nodeType == nil {
-		nopts.nodeType = func(ctx context.Context, id pulid.ID) (string, error) {
+		nopts.nodeType = func(ctx context.Context, id types.ID) (string, error) {
 			return "", fmt.Errorf("cannot resolve noder (%v) without its type", id)
 		}
 	}
@@ -68,7 +72,7 @@ func (c *Client) newNodeOpts(opts []NodeOption) *nodeOptions {
 //
 //	c.Noder(ctx, id)
 //	c.Noder(ctx, id, ent.WithNodeType(typeResolver))
-func (c *Client) Noder(ctx context.Context, id pulid.ID, opts ...NodeOption) (_ Noder, err error) {
+func (c *Client) Noder(ctx context.Context, id types.ID, opts ...NodeOption) (_ Noder, err error) {
 	defer func() {
 		if IsNotFound(err) {
 			err = multierror.Append(err, entgql.ErrNodeNotFound(id))
@@ -81,10 +85,26 @@ func (c *Client) Noder(ctx context.Context, id pulid.ID, opts ...NodeOption) (_ 
 	return c.noder(ctx, table, id)
 }
 
-func (c *Client) noder(ctx context.Context, table string, id pulid.ID) (Noder, error) {
+func (c *Client) noder(ctx context.Context, table string, id types.ID) (Noder, error) {
 	switch table {
+	case task.Table:
+		var uid types.ID
+		if err := uid.UnmarshalGQL(id); err != nil {
+			return nil, err
+		}
+		query := c.Task.Query().
+			Where(task.ID(uid))
+		query, err := query.CollectFields(ctx, "Task")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
 	case todo.Table:
-		var uid pulid.ID
+		var uid types.ID
 		if err := uid.UnmarshalGQL(id); err != nil {
 			return nil, err
 		}
@@ -100,7 +120,7 @@ func (c *Client) noder(ctx context.Context, table string, id pulid.ID) (Noder, e
 		}
 		return n, nil
 	case user.Table:
-		var uid pulid.ID
+		var uid types.ID
 		if err := uid.UnmarshalGQL(id); err != nil {
 			return nil, err
 		}
@@ -120,7 +140,7 @@ func (c *Client) noder(ctx context.Context, table string, id pulid.ID) (Noder, e
 	}
 }
 
-func (c *Client) Noders(ctx context.Context, ids []pulid.ID, opts ...NodeOption) ([]Noder, error) {
+func (c *Client) Noders(ctx context.Context, ids []types.ID, opts ...NodeOption) ([]Noder, error) {
 	switch len(ids) {
 	case 1:
 		noder, err := c.Noder(ctx, ids[0], opts...)
@@ -134,8 +154,8 @@ func (c *Client) Noders(ctx context.Context, ids []pulid.ID, opts ...NodeOption)
 
 	noders := make([]Noder, len(ids))
 	errors := make([]error, len(ids))
-	tables := make(map[string][]pulid.ID)
-	id2idx := make(map[pulid.ID][]int, len(ids))
+	tables := make(map[string][]types.ID)
+	id2idx := make(map[types.ID][]int, len(ids))
 	nopts := c.newNodeOpts(opts)
 	for i, id := range ids {
 		table, err := nopts.nodeType(ctx, id)
@@ -181,13 +201,29 @@ func (c *Client) Noders(ctx context.Context, ids []pulid.ID, opts ...NodeOption)
 	return noders, nil
 }
 
-func (c *Client) noders(ctx context.Context, table string, ids []pulid.ID) ([]Noder, error) {
+func (c *Client) noders(ctx context.Context, table string, ids []types.ID) ([]Noder, error) {
 	noders := make([]Noder, len(ids))
-	idmap := make(map[pulid.ID][]*Noder, len(ids))
+	idmap := make(map[types.ID][]*Noder, len(ids))
 	for i, id := range ids {
 		idmap[id] = append(idmap[id], &noders[i])
 	}
 	switch table {
+	case task.Table:
+		query := c.Task.Query().
+			Where(task.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Task")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case todo.Table:
 		query := c.Todo.Query().
 			Where(todo.IDIn(ids...))

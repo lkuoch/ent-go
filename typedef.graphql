@@ -4,4 +4,5 @@
 type Mutation {
   createTodo(input: CreateTodoInput!): Todo
   createUser(input: CreateUserInput!): User
+  createTask(input: CreateTaskInput!): Task
 }

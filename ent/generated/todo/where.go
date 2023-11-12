@@ -4,7 +4,7 @@ package todo
 
 import (
 	"lkuoch/ent-todo/ent/generated/predicate"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -12,47 +12,47 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id pulid.ID) predicate.Todo {
+func ID(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id pulid.ID) predicate.Todo {
+func IDEQ(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id pulid.ID) predicate.Todo {
+func IDNEQ(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...pulid.ID) predicate.Todo {
+func IDIn(ids ...types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...pulid.ID) predicate.Todo {
+func IDNotIn(ids ...types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id pulid.ID) predicate.Todo {
+func IDGT(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id pulid.ID) predicate.Todo {
+func IDGTE(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id pulid.ID) predicate.Todo {
+func IDLT(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id pulid.ID) predicate.Todo {
+func IDLTE(id types.ID) predicate.Todo {
 	return predicate.Todo(sql.FieldLTE(FieldID, id))
 }
 
@@ -69,6 +69,11 @@ func UpdatedAt(v time.Time) predicate.Todo {
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
 func Title(v string) predicate.Todo {
 	return predicate.Todo(sql.FieldEQ(FieldTitle, v))
+}
+
+// Body applies equality check predicate on the "body" field. It's identical to BodyEQ.
+func Body(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldEQ(FieldBody, v))
 }
 
 // TimeCompleted applies equality check predicate on the "time_completed" field. It's identical to TimeCompletedEQ.
@@ -221,44 +226,109 @@ func TitleContainsFold(v string) predicate.Todo {
 	return predicate.Todo(sql.FieldContainsFold(FieldTitle, v))
 }
 
-// PriorityEQ applies the EQ predicate on the "priority" field.
-func PriorityEQ(v Priority) predicate.Todo {
-	return predicate.Todo(sql.FieldEQ(FieldPriority, v))
+// BodyEQ applies the EQ predicate on the "body" field.
+func BodyEQ(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldEQ(FieldBody, v))
 }
 
-// PriorityNEQ applies the NEQ predicate on the "priority" field.
-func PriorityNEQ(v Priority) predicate.Todo {
-	return predicate.Todo(sql.FieldNEQ(FieldPriority, v))
+// BodyNEQ applies the NEQ predicate on the "body" field.
+func BodyNEQ(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldNEQ(FieldBody, v))
 }
 
-// PriorityIn applies the In predicate on the "priority" field.
-func PriorityIn(vs ...Priority) predicate.Todo {
-	return predicate.Todo(sql.FieldIn(FieldPriority, vs...))
+// BodyIn applies the In predicate on the "body" field.
+func BodyIn(vs ...string) predicate.Todo {
+	return predicate.Todo(sql.FieldIn(FieldBody, vs...))
 }
 
-// PriorityNotIn applies the NotIn predicate on the "priority" field.
-func PriorityNotIn(vs ...Priority) predicate.Todo {
-	return predicate.Todo(sql.FieldNotIn(FieldPriority, vs...))
+// BodyNotIn applies the NotIn predicate on the "body" field.
+func BodyNotIn(vs ...string) predicate.Todo {
+	return predicate.Todo(sql.FieldNotIn(FieldBody, vs...))
 }
 
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.Todo {
-	return predicate.Todo(sql.FieldEQ(FieldStatus, v))
+// BodyGT applies the GT predicate on the "body" field.
+func BodyGT(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldGT(FieldBody, v))
 }
 
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.Todo {
-	return predicate.Todo(sql.FieldNEQ(FieldStatus, v))
+// BodyGTE applies the GTE predicate on the "body" field.
+func BodyGTE(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldGTE(FieldBody, v))
 }
 
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.Todo {
-	return predicate.Todo(sql.FieldIn(FieldStatus, vs...))
+// BodyLT applies the LT predicate on the "body" field.
+func BodyLT(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldLT(FieldBody, v))
 }
 
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.Todo {
-	return predicate.Todo(sql.FieldNotIn(FieldStatus, vs...))
+// BodyLTE applies the LTE predicate on the "body" field.
+func BodyLTE(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldLTE(FieldBody, v))
+}
+
+// BodyContains applies the Contains predicate on the "body" field.
+func BodyContains(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldContains(FieldBody, v))
+}
+
+// BodyHasPrefix applies the HasPrefix predicate on the "body" field.
+func BodyHasPrefix(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldHasPrefix(FieldBody, v))
+}
+
+// BodyHasSuffix applies the HasSuffix predicate on the "body" field.
+func BodyHasSuffix(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldHasSuffix(FieldBody, v))
+}
+
+// BodyEqualFold applies the EqualFold predicate on the "body" field.
+func BodyEqualFold(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldEqualFold(FieldBody, v))
+}
+
+// BodyContainsFold applies the ContainsFold predicate on the "body" field.
+func BodyContainsFold(v string) predicate.Todo {
+	return predicate.Todo(sql.FieldContainsFold(FieldBody, v))
+}
+
+// ItemPriorityEQ applies the EQ predicate on the "item_priority" field.
+func ItemPriorityEQ(v types.ItemPriority) predicate.Todo {
+	return predicate.Todo(sql.FieldEQ(FieldItemPriority, v))
+}
+
+// ItemPriorityNEQ applies the NEQ predicate on the "item_priority" field.
+func ItemPriorityNEQ(v types.ItemPriority) predicate.Todo {
+	return predicate.Todo(sql.FieldNEQ(FieldItemPriority, v))
+}
+
+// ItemPriorityIn applies the In predicate on the "item_priority" field.
+func ItemPriorityIn(vs ...types.ItemPriority) predicate.Todo {
+	return predicate.Todo(sql.FieldIn(FieldItemPriority, vs...))
+}
+
+// ItemPriorityNotIn applies the NotIn predicate on the "item_priority" field.
+func ItemPriorityNotIn(vs ...types.ItemPriority) predicate.Todo {
+	return predicate.Todo(sql.FieldNotIn(FieldItemPriority, vs...))
+}
+
+// ItemStatusEQ applies the EQ predicate on the "item_status" field.
+func ItemStatusEQ(v types.ItemStatus) predicate.Todo {
+	return predicate.Todo(sql.FieldEQ(FieldItemStatus, v))
+}
+
+// ItemStatusNEQ applies the NEQ predicate on the "item_status" field.
+func ItemStatusNEQ(v types.ItemStatus) predicate.Todo {
+	return predicate.Todo(sql.FieldNEQ(FieldItemStatus, v))
+}
+
+// ItemStatusIn applies the In predicate on the "item_status" field.
+func ItemStatusIn(vs ...types.ItemStatus) predicate.Todo {
+	return predicate.Todo(sql.FieldIn(FieldItemStatus, vs...))
+}
+
+// ItemStatusNotIn applies the NotIn predicate on the "item_status" field.
+func ItemStatusNotIn(vs ...types.ItemStatus) predicate.Todo {
+	return predicate.Todo(sql.FieldNotIn(FieldItemStatus, vs...))
 }
 
 // TimeCompletedEQ applies the EQ predicate on the "time_completed" field.
@@ -326,6 +396,29 @@ func HasUser() predicate.Todo {
 func HasUserWith(preds ...predicate.User) predicate.Todo {
 	return predicate.Todo(func(s *sql.Selector) {
 		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTasks applies the HasEdge predicate on the "tasks" edge.
+func HasTasks() predicate.Todo {
+	return predicate.Todo(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TasksTable, TasksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTasksWith applies the HasEdge predicate on the "tasks" edge with a given conditions (other predicates).
+func HasTasksWith(preds ...predicate.Task) predicate.Todo {
+	return predicate.Todo(func(s *sql.Selector) {
+		step := newTasksStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

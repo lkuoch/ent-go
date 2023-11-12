@@ -13,11 +13,61 @@
 2. `just run`
    - Spins up graphql server
 
+## Arch
+```mermaid
+erDiagram
+    USER ||--o{ TODO : has
+    USER {
+        ID id
+        datetime created_at
+        datetime updated_at
+
+        string username
+        string display_name
+
+        string password_hash
+        string password_salt
+    }
+
+    TODO {
+        ID id
+        datetime created_at
+        datetime updated_at
+
+        string title
+        string body
+        datetime time_completed
+        string priority FK
+        string status FK
+    }
+    TODO ||--o{ TASK : has
+    TODO ||--|| PRIORITY : has
+    TODO ||--|| STATUS : has
+
+    TASK {
+        ID id
+        string title
+        string status FK
+    }
+    TASK ||--|| STATUS : has
+
+    PRIORITY {
+        string HIGH
+        string MEDIUM
+        string LOW
+        string NONE
+    }
+
+    STATUS {
+        string IN_PROGRESS
+        string COMPLETED
+    }
+```
 
 ## Tasks
 - [x] Setup migrations
 - [x] Setup Relay Node Interface
 - [x] Setup relations
-- [ ] Setup more tables + operations
+- [x] Setup more tables + operations
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy

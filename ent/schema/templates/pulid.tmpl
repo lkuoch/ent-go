@@ -4,7 +4,7 @@
 {{ template "header" $ }}
 
 // Map of prefix hash to table name
-var prefixMap = map[pulid.ID]string{
+var prefixMap = map[types.ID]string{
 	{{- range $node := $.Nodes }}
 		{{- if $annotation := $node.Annotations.__PULID__ }}
 			"{{ $annotation.Prefix }}": {{ $node.Package }}.Table,
@@ -13,7 +13,7 @@ var prefixMap = map[pulid.ID]string{
 }
 
 // Resolver for node interface
-func IDToType(_ context.Context, id pulid.ID) (string, error) {
+func IDToType(_ context.Context, id types.ID) (string, error) {
 	prefixLength := 16
 
 	if len(id) < prefixLength {

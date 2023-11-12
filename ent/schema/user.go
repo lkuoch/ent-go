@@ -17,11 +17,11 @@ type User struct {
 	ent.Schema
 }
 
-func (User) TableName() string {
+func (User) EntityName() string {
 	return "user"
 }
 
-// Mixins of the User.
+// Mixins of the User
 func (u User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixins.NewIdMixin(u),
@@ -29,7 +29,7 @@ func (u User) Mixin() []ent.Mixin {
 	}
 }
 
-// Fields of the User.
+// Fields of the User
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.
@@ -44,7 +44,7 @@ func (User) Fields() []ent.Field {
 	}
 }
 
-// Edges of the User.
+// Edges of the User
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		// User can have multiple todos
@@ -54,10 +54,10 @@ func (User) Edges() []ent.Edge {
 	}
 }
 
-// Annotations of the User.
+// Annotations of the User
 func (u User) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		entsql.Annotation{Table: u.TableName()},
+		entsql.Annotation{Table: u.EntityName()},
 		entgql.RelayConnection(),
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationCreate(), entgql.MutationUpdate()),

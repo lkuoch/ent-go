@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 
 	"entgo.io/ent/dialect"
@@ -66,28 +66,28 @@ func (uc *UserCreate) SetDisplayName(s string) *UserCreate {
 }
 
 // SetID sets the "id" field.
-func (uc *UserCreate) SetID(pu pulid.ID) *UserCreate {
-	uc.mutation.SetID(pu)
+func (uc *UserCreate) SetID(t types.ID) *UserCreate {
+	uc.mutation.SetID(t)
 	return uc
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (uc *UserCreate) SetNillableID(pu *pulid.ID) *UserCreate {
-	if pu != nil {
-		uc.SetID(*pu)
+func (uc *UserCreate) SetNillableID(t *types.ID) *UserCreate {
+	if t != nil {
+		uc.SetID(*t)
 	}
 	return uc
 }
 
 // AddTodoIDs adds the "todos" edge to the Todo entity by IDs.
-func (uc *UserCreate) AddTodoIDs(ids ...pulid.ID) *UserCreate {
+func (uc *UserCreate) AddTodoIDs(ids ...types.ID) *UserCreate {
 	uc.mutation.AddTodoIDs(ids...)
 	return uc
 }
 
 // AddTodos adds the "todos" edges to the Todo entity.
 func (uc *UserCreate) AddTodos(t ...*Todo) *UserCreate {
-	ids := make([]pulid.ID, len(t))
+	ids := make([]types.ID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -182,7 +182,7 @@ func (uc *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*pulid.ID); ok {
+		if id, ok := _spec.ID.Value.(*types.ID); ok {
 			_node.ID = *id
 		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
 			return nil, err
@@ -432,7 +432,7 @@ func (u *UserUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *UserUpsertOne) ID(ctx context.Context) (id pulid.ID, err error) {
+func (u *UserUpsertOne) ID(ctx context.Context) (id types.ID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -446,7 +446,7 @@ func (u *UserUpsertOne) ID(ctx context.Context) (id pulid.ID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *UserUpsertOne) IDX(ctx context.Context) pulid.ID {
+func (u *UserUpsertOne) IDX(ctx context.Context) types.ID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)

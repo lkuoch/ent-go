@@ -1,7 +1,7 @@
 package mixins
 
 import (
-	pulid "lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
@@ -16,12 +16,12 @@ type IdMixin struct {
 }
 
 type IdMixinConfig interface {
-	TableName() string
+	EntityName() string
 }
 
 func NewIdMixin(meta IdMixinConfig) *IdMixin {
 	return &IdMixin{
-		tableName: meta.TableName(),
+		tableName: meta.EntityName(),
 	}
 }
 
@@ -30,9 +30,9 @@ func (i IdMixin) Fields() []ent.Field {
 		field.
 			String("id").
 			Immutable().
-			GoType(pulid.ID(i.tableName)).
-			DefaultFunc(func() pulid.ID {
-				return pulid.New(i.tableName)
+			GoType(types.ID(i.tableName)).
+			DefaultFunc(func() types.ID {
+				return types.New(i.tableName)
 			}).
 			Annotations(
 				entgql.OrderField("ID"),
@@ -50,6 +50,6 @@ func (a Annotation) Name() string {
 
 func (i IdMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		Annotation{Prefix: pulid.NewPrefix(i.tableName)},
+		Annotation{Prefix: types.NewPrefix(i.tableName)},
 	}
 }

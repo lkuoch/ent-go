@@ -4,13 +4,12 @@ package todo
 
 import (
 	"fmt"
-	"io"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
-	"strconv"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/99designs/gqlgen/graphql"
 )
 
 const (
@@ -24,14 +23,18 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
-	// FieldPriority holds the string denoting the priority field in the database.
-	FieldPriority = "priority"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
+	// FieldBody holds the string denoting the body field in the database.
+	FieldBody = "body"
+	// FieldItemPriority holds the string denoting the item_priority field in the database.
+	FieldItemPriority = "item_priority"
+	// FieldItemStatus holds the string denoting the item_status field in the database.
+	FieldItemStatus = "item_status"
 	// FieldTimeCompleted holds the string denoting the time_completed field in the database.
 	FieldTimeCompleted = "time_completed"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeTasks holds the string denoting the tasks edge name in mutations.
+	EdgeTasks = "tasks"
 	// Table holds the table name of the todo in the database.
 	Table = "todo"
 	// UserTable is the table that holds the user relation/edge.
@@ -41,6 +44,13 @@ const (
 	UserInverseTable = "user"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_todos"
+	// TasksTable is the table that holds the tasks relation/edge.
+	TasksTable = "task"
+	// TasksInverseTable is the table name for the Task entity.
+	// It exists in this package in order to avoid circular dependency with the "task" package.
+	TasksInverseTable = "task"
+	// TasksColumn is the table column denoting the tasks relation/edge.
+	TasksColumn = "todo_tasks"
 )
 
 // Columns holds all SQL columns for todo fields.
@@ -49,8 +59,9 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldTitle,
-	FieldPriority,
-	FieldStatus,
+	FieldBody,
+	FieldItemPriority,
+	FieldItemStatus,
 	FieldTimeCompleted,
 }
 
@@ -85,60 +96,30 @@ var (
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() pulid.ID
+	DefaultID func() types.ID
 )
 
-// Priority defines the type for the "priority" enum field.
-type Priority string
+const DefaultItemPriority types.ItemPriority = "NONE"
 
-// PriorityNone is the default value of the Priority enum.
-const DefaultPriority = PriorityNone
-
-// Priority values.
-const (
-	PriorityHigh   Priority = "HIGH"
-	PriorityMedium Priority = "MEDIUM"
-	PriorityLow    Priority = "LOW"
-	PriorityNone   Priority = "NONE"
-)
-
-func (pr Priority) String() string {
-	return string(pr)
-}
-
-// PriorityValidator is a validator for the "priority" field enum values. It is called by the builders before save.
-func PriorityValidator(pr Priority) error {
-	switch pr {
-	case PriorityHigh, PriorityMedium, PriorityLow, PriorityNone:
+// ItemPriorityValidator is a validator for the "item_priority" field enum values. It is called by the builders before save.
+func ItemPriorityValidator(ip types.ItemPriority) error {
+	switch ip {
+	case "HIGH", "MEDIUM", "LOW", "NONE":
 		return nil
 	default:
-		return fmt.Errorf("todo: invalid enum value for priority field: %q", pr)
+		return fmt.Errorf("todo: invalid enum value for item_priority field: %q", ip)
 	}
 }
 
-// Status defines the type for the "status" enum field.
-type Status string
+const DefaultItemStatus types.ItemStatus = "IN_PROGRESS"
 
-// StatusInProgress is the default value of the Status enum.
-const DefaultStatus = StatusInProgress
-
-// Status values.
-const (
-	StatusInProgress Status = "IN_PROGRESS"
-	StatusCompleted  Status = "COMPLETED"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusInProgress, StatusCompleted:
+// ItemStatusValidator is a validator for the "item_status" field enum values. It is called by the builders before save.
+func ItemStatusValidator(is types.ItemStatus) error {
+	switch is {
+	case "IN_PROGRESS", "COMPLETED":
 		return nil
 	default:
-		return fmt.Errorf("todo: invalid enum value for status field: %q", s)
+		return fmt.Errorf("todo: invalid enum value for item_status field: %q", is)
 	}
 }
 
@@ -165,14 +146,19 @@ func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTitle, opts...).ToFunc()
 }
 
-// ByPriority orders the results by the priority field.
-func ByPriority(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPriority, opts...).ToFunc()
+// ByBody orders the results by the body field.
+func ByBody(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBody, opts...).ToFunc()
 }
 
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+// ByItemPriority orders the results by the item_priority field.
+func ByItemPriority(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldItemPriority, opts...).ToFunc()
+}
+
+// ByItemStatus orders the results by the item_status field.
+func ByItemStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldItemStatus, opts...).ToFunc()
 }
 
 // ByTimeCompleted orders the results by the time_completed field.
@@ -186,6 +172,20 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByTasksCount orders the results by tasks count.
+func ByTasksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTasksStep(), opts...)
+	}
+}
+
+// ByTasks orders the results by tasks terms.
+func ByTasks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTasksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -193,39 +193,24 @@ func newUserStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }
-
-// MarshalGQL implements graphql.Marshaler interface.
-func (e Priority) MarshalGQL(w io.Writer) {
-	io.WriteString(w, strconv.Quote(e.String()))
+func newTasksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TasksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TasksTable, TasksColumn),
+	)
 }
 
-// UnmarshalGQL implements graphql.Unmarshaler interface.
-func (e *Priority) UnmarshalGQL(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("enum %T must be a string", val)
-	}
-	*e = Priority(str)
-	if err := PriorityValidator(*e); err != nil {
-		return fmt.Errorf("%s is not a valid Priority", str)
-	}
-	return nil
-}
+var (
+	// types.ItemPriority must implement graphql.Marshaler.
+	_ graphql.Marshaler = (*types.ItemPriority)(nil)
+	// types.ItemPriority must implement graphql.Unmarshaler.
+	_ graphql.Unmarshaler = (*types.ItemPriority)(nil)
+)
 
-// MarshalGQL implements graphql.Marshaler interface.
-func (e Status) MarshalGQL(w io.Writer) {
-	io.WriteString(w, strconv.Quote(e.String()))
-}
-
-// UnmarshalGQL implements graphql.Unmarshaler interface.
-func (e *Status) UnmarshalGQL(val interface{}) error {
-	str, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("enum %T must be a string", val)
-	}
-	*e = Status(str)
-	if err := StatusValidator(*e); err != nil {
-		return fmt.Errorf("%s is not a valid Status", str)
-	}
-	return nil
-}
+var (
+	// types.ItemStatus must implement graphql.Marshaler.
+	_ graphql.Marshaler = (*types.ItemStatus)(nil)
+	// types.ItemStatus must implement graphql.Unmarshaler.
+	_ graphql.Unmarshaler = (*types.ItemStatus)(nil)
+)

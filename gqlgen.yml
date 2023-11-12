@@ -17,7 +17,7 @@ autobind:
 models:
   ID:
     model:
-      - lkuoch/ent-todo/ent/schema/types/pulid.ID
+      - lkuoch/ent-todo/ent/schema/types.ID
   Node:
     model:
       - lkuoch/ent-todo/ent/generated.Noder

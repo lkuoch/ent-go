@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"strings"
 	"time"
 
@@ -18,23 +18,25 @@ import (
 type Todo struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID pulid.ID `json:"id,omitempty"`
+	ID types.ID `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
-	// Priority holds the value of the "priority" field.
-	Priority todo.Priority `json:"priority,omitempty"`
-	// Status holds the value of the "status" field.
-	Status todo.Status `json:"status,omitempty"`
+	// Body holds the value of the "body" field.
+	Body *string `json:"body,omitempty"`
+	// ItemPriority holds the value of the "item_priority" field.
+	ItemPriority types.ItemPriority `json:"item_priority,omitempty"`
+	// ItemStatus holds the value of the "item_status" field.
+	ItemStatus types.ItemStatus `json:"item_status,omitempty"`
 	// TimeCompleted holds the value of the "time_completed" field.
 	TimeCompleted *time.Time `json:"time_completed,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TodoQuery when eager-loading is set.
 	Edges        TodoEdges `json:"edges"`
-	user_todos   *pulid.ID
+	user_todos   *types.ID
 	selectValues sql.SelectValues
 }
 
@@ -42,11 +44,15 @@ type Todo struct {
 type TodoEdges struct {
 	// Todo belongs to single User
 	User *User `json:"user,omitempty"`
+	// Todo has multiple Tasks
+	Tasks []*Task `json:"tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 	// totalCount holds the count of the edges above.
-	totalCount [1]map[string]int
+	totalCount [2]map[string]int
+
+	namedTasks map[string][]*Task
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -62,19 +68,32 @@ func (e TodoEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// TasksOrErr returns the Tasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e TodoEdges) TasksOrErr() ([]*Task, error) {
+	if e.loadedTypes[1] {
+		return e.Tasks, nil
+	}
+	return nil, &NotLoadedError{edge: "tasks"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Todo) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case todo.FieldID:
-			values[i] = new(pulid.ID)
-		case todo.FieldTitle, todo.FieldPriority, todo.FieldStatus:
+		case todo.FieldTitle, todo.FieldBody:
 			values[i] = new(sql.NullString)
 		case todo.FieldCreatedAt, todo.FieldUpdatedAt, todo.FieldTimeCompleted:
 			values[i] = new(sql.NullTime)
+		case todo.FieldID:
+			values[i] = new(types.ID)
+		case todo.FieldItemPriority:
+			values[i] = new(types.ItemPriority)
+		case todo.FieldItemStatus:
+			values[i] = new(types.ItemStatus)
 		case todo.ForeignKeys[0]: // user_todos
-			values[i] = &sql.NullScanner{S: new(pulid.ID)}
+			values[i] = &sql.NullScanner{S: new(types.ID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -91,7 +110,7 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case todo.FieldID:
-			if value, ok := values[i].(*pulid.ID); !ok {
+			if value, ok := values[i].(*types.ID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				t.ID = *value
@@ -114,17 +133,24 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Title = value.String
 			}
-		case todo.FieldPriority:
+		case todo.FieldBody:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field priority", values[i])
+				return fmt.Errorf("unexpected type %T for field body", values[i])
 			} else if value.Valid {
-				t.Priority = todo.Priority(value.String)
+				t.Body = new(string)
+				*t.Body = value.String
 			}
-		case todo.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				t.Status = todo.Status(value.String)
+		case todo.FieldItemPriority:
+			if value, ok := values[i].(*types.ItemPriority); !ok {
+				return fmt.Errorf("unexpected type %T for field item_priority", values[i])
+			} else if value != nil {
+				t.ItemPriority = *value
+			}
+		case todo.FieldItemStatus:
+			if value, ok := values[i].(*types.ItemStatus); !ok {
+				return fmt.Errorf("unexpected type %T for field item_status", values[i])
+			} else if value != nil {
+				t.ItemStatus = *value
 			}
 		case todo.FieldTimeCompleted:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -137,8 +163,8 @@ func (t *Todo) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field user_todos", values[i])
 			} else if value.Valid {
-				t.user_todos = new(pulid.ID)
-				*t.user_todos = *value.S.(*pulid.ID)
+				t.user_todos = new(types.ID)
+				*t.user_todos = *value.S.(*types.ID)
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
@@ -156,6 +182,11 @@ func (t *Todo) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the Todo entity.
 func (t *Todo) QueryUser() *UserQuery {
 	return NewTodoClient(t.config).QueryUser(t)
+}
+
+// QueryTasks queries the "tasks" edge of the Todo entity.
+func (t *Todo) QueryTasks() *TaskQuery {
+	return NewTodoClient(t.config).QueryTasks(t)
 }
 
 // Update returns a builder for updating this Todo.
@@ -190,11 +221,16 @@ func (t *Todo) String() string {
 	builder.WriteString("title=")
 	builder.WriteString(t.Title)
 	builder.WriteString(", ")
-	builder.WriteString("priority=")
-	builder.WriteString(fmt.Sprintf("%v", t.Priority))
+	if v := t.Body; v != nil {
+		builder.WriteString("body=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", t.Status))
+	builder.WriteString("item_priority=")
+	builder.WriteString(fmt.Sprintf("%v", t.ItemPriority))
+	builder.WriteString(", ")
+	builder.WriteString("item_status=")
+	builder.WriteString(fmt.Sprintf("%v", t.ItemStatus))
 	builder.WriteString(", ")
 	if v := t.TimeCompleted; v != nil {
 		builder.WriteString("time_completed=")
@@ -202,6 +238,30 @@ func (t *Todo) String() string {
 	}
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedTasks returns the Tasks named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (t *Todo) NamedTasks(name string) ([]*Task, error) {
+	if t.Edges.namedTasks == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := t.Edges.namedTasks[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (t *Todo) appendNamedTasks(name string, edges ...*Task) {
+	if t.Edges.namedTasks == nil {
+		t.Edges.namedTasks = make(map[string][]*Task)
+	}
+	if len(edges) == 0 {
+		t.Edges.namedTasks[name] = []*Task{}
+	} else {
+		t.Edges.namedTasks[name] = append(t.Edges.namedTasks[name], edges...)
+	}
 }
 
 // Todos is a parsable slice of Todo.

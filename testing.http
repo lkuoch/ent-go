@@ -25,19 +25,40 @@ POST {{base_url}}
 Content-Type: application/json
 X-REQUEST-TYPE: GraphQL
 
-mutation CreateTodo($userID: ID!, $title: String!) {
+mutation CreateTodo($userID: ID!, $title: String!, $body: String!) {
   createTodo(
-    input: {userID: $userID, title: $title, priority: HIGH, status: IN_PROGRESS}
+    input: {userID: $userID, title: $title, body: $body, itemPriority: HIGH, itemStatus: IN_PROGRESS}
   ) {
     id
     title
+    body
   }
 }
 
 {
   "userID": "{{CreateUserMutation.response.body.data.createUser.id}}",
-  "title": "T-{{timestamp}}"
+  "title": "T-{{timestamp}}",
+  "body": "body"
 }
+
+
+### Create Task
+# @name CreateTaskMutation
+POST {{base_url}}
+Content-Type: application/json
+X-REQUEST-TYPE: GraphQL
+
+mutation CreateTask($todoId: ID!, $title: String!) {
+  createTask(input: {todoID: $todoId, title: $title, itemStatus: IN_PROGRESS}) {
+    id
+  }
+}
+
+{
+  "todoId": "{{CreateTodoMutation.response.body.data.createTodo.id}}",
+  "title": "T-{{timestamp}}",
+}
+
 
 ### Node interface
 POST {{base_url}}
@@ -50,6 +71,8 @@ query Node($id: ID!) {
       __typename
       id
       title
+      itemPriority
+      itemStatus
     }
     ... on User {
       id
@@ -64,6 +87,11 @@ query Node($id: ID!) {
           }
         }
       }
+    }
+    ... on Task {
+      id
+      title
+      itemStatus
     }
   }
 }
@@ -89,6 +117,14 @@ query Queries {
       }
     }
   }
+  tasks {
+    edges {
+      node {
+        id
+        title
+      }
+    }
+  }
   users {
     edges {
       node {
@@ -107,4 +143,5 @@ query Queries {
     }
   }
 }
+
 

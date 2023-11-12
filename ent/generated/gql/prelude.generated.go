@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -2206,26 +2206,26 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx context.Context, v interface{}) (pulid.ID, error) {
-	var res pulid.ID
+func (ec *executionContext) unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx context.Context, v interface{}) (types.ID, error) {
+	var res types.ID
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx context.Context, sel ast.SelectionSet, v pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx context.Context, sel ast.SelectionSet, v types.ID) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐIDᚄ(ctx context.Context, v interface{}) ([]pulid.ID, error) {
+func (ec *executionContext) unmarshalNID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐIDᚄ(ctx context.Context, v interface{}) ([]types.ID, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]pulid.ID, len(vSlice))
+	res := make([]types.ID, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -2233,10 +2233,10 @@ func (ec *executionContext) unmarshalNID2ᚕlkuochᚋentᚑtodoᚋentᚋschema�
 	return res, nil
 }
 
-func (ec *executionContext) marshalNID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []types.ID) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -2270,6 +2270,27 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -2557,7 +2578,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐIDᚄ(ctx context.Context, v interface{}) ([]pulid.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐIDᚄ(ctx context.Context, v interface{}) ([]types.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -2566,10 +2587,10 @@ func (ec *executionContext) unmarshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschema�
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]pulid.ID, len(vSlice))
+	res := make([]types.ID, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -2577,13 +2598,13 @@ func (ec *executionContext) unmarshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschema�
 	return res, nil
 }
 
-func (ec *executionContext) marshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []types.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2lkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -2595,16 +2616,16 @@ func (ec *executionContext) marshalOID2ᚕlkuochᚋentᚑtodoᚋentᚋschemaᚋt
 	return ret
 }
 
-func (ec *executionContext) unmarshalOID2ᚖlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx context.Context, v interface{}) (*pulid.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚖlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx context.Context, v interface{}) (*types.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(pulid.ID)
+	var res = new(types.ID)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOID2ᚖlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚋpulidᚐID(ctx context.Context, sel ast.SelectionSet, v *pulid.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚖlkuochᚋentᚑtodoᚋentᚋschemaᚋtypesᚐID(ctx context.Context, sel ast.SelectionSet, v *types.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

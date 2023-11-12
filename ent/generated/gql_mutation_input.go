@@ -3,20 +3,75 @@
 package generated
 
 import (
-	"lkuoch/ent-todo/ent/generated/todo"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 )
+
+// CreateTaskInput represents a mutation input for creating tasks.
+type CreateTaskInput struct {
+	Title      string
+	ItemStatus *types.ItemStatus
+	TodoID     types.ID
+}
+
+// Mutate applies the CreateTaskInput on the TaskMutation builder.
+func (i *CreateTaskInput) Mutate(m *TaskMutation) {
+	m.SetTitle(i.Title)
+	if v := i.ItemStatus; v != nil {
+		m.SetItemStatus(*v)
+	}
+	m.SetTodoID(i.TodoID)
+}
+
+// SetInput applies the change-set in the CreateTaskInput on the TaskCreate builder.
+func (c *TaskCreate) SetInput(i CreateTaskInput) *TaskCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// UpdateTaskInput represents a mutation input for updating tasks.
+type UpdateTaskInput struct {
+	Title      *string
+	ItemStatus *types.ItemStatus
+	TodoID     *types.ID
+}
+
+// Mutate applies the UpdateTaskInput on the TaskMutation builder.
+func (i *UpdateTaskInput) Mutate(m *TaskMutation) {
+	if v := i.Title; v != nil {
+		m.SetTitle(*v)
+	}
+	if v := i.ItemStatus; v != nil {
+		m.SetItemStatus(*v)
+	}
+	if v := i.TodoID; v != nil {
+		m.SetTodoID(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateTaskInput on the TaskUpdate builder.
+func (c *TaskUpdate) SetInput(i UpdateTaskInput) *TaskUpdate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// SetInput applies the change-set in the UpdateTaskInput on the TaskUpdateOne builder.
+func (c *TaskUpdateOne) SetInput(i UpdateTaskInput) *TaskUpdateOne {
+	i.Mutate(c.Mutation())
+	return c
+}
 
 // CreateTodoInput represents a mutation input for creating todos.
 type CreateTodoInput struct {
 	CreatedAt     *time.Time
 	UpdatedAt     *time.Time
 	Title         string
-	Priority      *todo.Priority
-	Status        *todo.Status
+	Body          string
+	ItemPriority  *types.ItemPriority
+	ItemStatus    *types.ItemStatus
 	TimeCompleted *time.Time
-	UserID        *pulid.ID
+	UserID        types.ID
+	TaskIDs       []types.ID
 }
 
 // Mutate applies the CreateTodoInput on the TodoMutation builder.
@@ -28,17 +83,19 @@ func (i *CreateTodoInput) Mutate(m *TodoMutation) {
 		m.SetUpdatedAt(*v)
 	}
 	m.SetTitle(i.Title)
-	if v := i.Priority; v != nil {
-		m.SetPriority(*v)
+	m.SetBody(i.Body)
+	if v := i.ItemPriority; v != nil {
+		m.SetItemPriority(*v)
 	}
-	if v := i.Status; v != nil {
-		m.SetStatus(*v)
+	if v := i.ItemStatus; v != nil {
+		m.SetItemStatus(*v)
 	}
 	if v := i.TimeCompleted; v != nil {
 		m.SetTimeCompleted(*v)
 	}
-	if v := i.UserID; v != nil {
-		m.SetUserID(*v)
+	m.SetUserID(i.UserID)
+	if v := i.TaskIDs; len(v) > 0 {
+		m.AddTaskIDs(v...)
 	}
 }
 
@@ -52,12 +109,15 @@ func (c *TodoCreate) SetInput(i CreateTodoInput) *TodoCreate {
 type UpdateTodoInput struct {
 	UpdatedAt          *time.Time
 	Title              *string
-	Priority           *todo.Priority
-	Status             *todo.Status
+	Body               *string
+	ItemPriority       *types.ItemPriority
+	ItemStatus         *types.ItemStatus
 	ClearTimeCompleted bool
 	TimeCompleted      *time.Time
-	ClearUser          bool
-	UserID             *pulid.ID
+	UserID             *types.ID
+	ClearTasks         bool
+	AddTaskIDs         []types.ID
+	RemoveTaskIDs      []types.ID
 }
 
 // Mutate applies the UpdateTodoInput on the TodoMutation builder.
@@ -68,11 +128,14 @@ func (i *UpdateTodoInput) Mutate(m *TodoMutation) {
 	if v := i.Title; v != nil {
 		m.SetTitle(*v)
 	}
-	if v := i.Priority; v != nil {
-		m.SetPriority(*v)
+	if v := i.Body; v != nil {
+		m.SetBody(*v)
 	}
-	if v := i.Status; v != nil {
-		m.SetStatus(*v)
+	if v := i.ItemPriority; v != nil {
+		m.SetItemPriority(*v)
+	}
+	if v := i.ItemStatus; v != nil {
+		m.SetItemStatus(*v)
 	}
 	if i.ClearTimeCompleted {
 		m.ClearTimeCompleted()
@@ -80,11 +143,17 @@ func (i *UpdateTodoInput) Mutate(m *TodoMutation) {
 	if v := i.TimeCompleted; v != nil {
 		m.SetTimeCompleted(*v)
 	}
-	if i.ClearUser {
-		m.ClearUser()
-	}
 	if v := i.UserID; v != nil {
 		m.SetUserID(*v)
+	}
+	if i.ClearTasks {
+		m.ClearTasks()
+	}
+	if v := i.AddTaskIDs; len(v) > 0 {
+		m.AddTaskIDs(v...)
+	}
+	if v := i.RemoveTaskIDs; len(v) > 0 {
+		m.RemoveTaskIDs(v...)
 	}
 }
 
@@ -106,7 +175,7 @@ type CreateUserInput struct {
 	UpdatedAt   *time.Time
 	Username    string
 	DisplayName string
-	TodoIDs     []pulid.ID
+	TodoIDs     []types.ID
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.
@@ -136,8 +205,8 @@ type UpdateUserInput struct {
 	Username      *string
 	DisplayName   *string
 	ClearTodos    bool
-	AddTodoIDs    []pulid.ID
-	RemoveTodoIDs []pulid.ID
+	AddTodoIDs    []types.ID
+	RemoveTodoIDs []types.ID
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation builder.

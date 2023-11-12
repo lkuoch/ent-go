@@ -6,11 +6,230 @@ import (
 	"errors"
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/predicate"
+	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 )
+
+// TaskWhereInput represents a where input for filtering Task queries.
+type TaskWhereInput struct {
+	Predicates []predicate.Task  `json:"-"`
+	Not        *TaskWhereInput   `json:"not,omitempty"`
+	Or         []*TaskWhereInput `json:"or,omitempty"`
+	And        []*TaskWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *types.ID  `json:"id,omitempty"`
+	IDNEQ   *types.ID  `json:"idNEQ,omitempty"`
+	IDIn    []types.ID `json:"idIn,omitempty"`
+	IDNotIn []types.ID `json:"idNotIn,omitempty"`
+	IDGT    *types.ID  `json:"idGT,omitempty"`
+	IDGTE   *types.ID  `json:"idGTE,omitempty"`
+	IDLT    *types.ID  `json:"idLT,omitempty"`
+	IDLTE   *types.ID  `json:"idLTE,omitempty"`
+
+	// "title" field predicates.
+	Title             *string  `json:"title,omitempty"`
+	TitleNEQ          *string  `json:"titleNEQ,omitempty"`
+	TitleIn           []string `json:"titleIn,omitempty"`
+	TitleNotIn        []string `json:"titleNotIn,omitempty"`
+	TitleGT           *string  `json:"titleGT,omitempty"`
+	TitleGTE          *string  `json:"titleGTE,omitempty"`
+	TitleLT           *string  `json:"titleLT,omitempty"`
+	TitleLTE          *string  `json:"titleLTE,omitempty"`
+	TitleContains     *string  `json:"titleContains,omitempty"`
+	TitleHasPrefix    *string  `json:"titleHasPrefix,omitempty"`
+	TitleHasSuffix    *string  `json:"titleHasSuffix,omitempty"`
+	TitleEqualFold    *string  `json:"titleEqualFold,omitempty"`
+	TitleContainsFold *string  `json:"titleContainsFold,omitempty"`
+
+	// "item_status" field predicates.
+	ItemStatus      *types.ItemStatus  `json:"itemStatus,omitempty"`
+	ItemStatusNEQ   *types.ItemStatus  `json:"itemStatusNEQ,omitempty"`
+	ItemStatusIn    []types.ItemStatus `json:"itemStatusIn,omitempty"`
+	ItemStatusNotIn []types.ItemStatus `json:"itemStatusNotIn,omitempty"`
+
+	// "todo" edge predicates.
+	HasTodo     *bool             `json:"hasTodo,omitempty"`
+	HasTodoWith []*TodoWhereInput `json:"hasTodoWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *TaskWhereInput) AddPredicates(predicates ...predicate.Task) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the TaskWhereInput filter on the TaskQuery builder.
+func (i *TaskWhereInput) Filter(q *TaskQuery) (*TaskQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyTaskWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyTaskWhereInput is returned in case the TaskWhereInput is empty.
+var ErrEmptyTaskWhereInput = errors.New("generated: empty predicate TaskWhereInput")
+
+// P returns a predicate for filtering tasks.
+// An error is returned if the input is empty or invalid.
+func (i *TaskWhereInput) P() (predicate.Task, error) {
+	var predicates []predicate.Task
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, task.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Task, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, task.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Task, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, task.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, task.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, task.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, task.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, task.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, task.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, task.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, task.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, task.IDLTE(*i.IDLTE))
+	}
+	if i.Title != nil {
+		predicates = append(predicates, task.TitleEQ(*i.Title))
+	}
+	if i.TitleNEQ != nil {
+		predicates = append(predicates, task.TitleNEQ(*i.TitleNEQ))
+	}
+	if len(i.TitleIn) > 0 {
+		predicates = append(predicates, task.TitleIn(i.TitleIn...))
+	}
+	if len(i.TitleNotIn) > 0 {
+		predicates = append(predicates, task.TitleNotIn(i.TitleNotIn...))
+	}
+	if i.TitleGT != nil {
+		predicates = append(predicates, task.TitleGT(*i.TitleGT))
+	}
+	if i.TitleGTE != nil {
+		predicates = append(predicates, task.TitleGTE(*i.TitleGTE))
+	}
+	if i.TitleLT != nil {
+		predicates = append(predicates, task.TitleLT(*i.TitleLT))
+	}
+	if i.TitleLTE != nil {
+		predicates = append(predicates, task.TitleLTE(*i.TitleLTE))
+	}
+	if i.TitleContains != nil {
+		predicates = append(predicates, task.TitleContains(*i.TitleContains))
+	}
+	if i.TitleHasPrefix != nil {
+		predicates = append(predicates, task.TitleHasPrefix(*i.TitleHasPrefix))
+	}
+	if i.TitleHasSuffix != nil {
+		predicates = append(predicates, task.TitleHasSuffix(*i.TitleHasSuffix))
+	}
+	if i.TitleEqualFold != nil {
+		predicates = append(predicates, task.TitleEqualFold(*i.TitleEqualFold))
+	}
+	if i.TitleContainsFold != nil {
+		predicates = append(predicates, task.TitleContainsFold(*i.TitleContainsFold))
+	}
+	if i.ItemStatus != nil {
+		predicates = append(predicates, task.ItemStatusEQ(*i.ItemStatus))
+	}
+	if i.ItemStatusNEQ != nil {
+		predicates = append(predicates, task.ItemStatusNEQ(*i.ItemStatusNEQ))
+	}
+	if len(i.ItemStatusIn) > 0 {
+		predicates = append(predicates, task.ItemStatusIn(i.ItemStatusIn...))
+	}
+	if len(i.ItemStatusNotIn) > 0 {
+		predicates = append(predicates, task.ItemStatusNotIn(i.ItemStatusNotIn...))
+	}
+
+	if i.HasTodo != nil {
+		p := task.HasTodo()
+		if !*i.HasTodo {
+			p = task.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTodoWith) > 0 {
+		with := make([]predicate.Todo, 0, len(i.HasTodoWith))
+		for _, w := range i.HasTodoWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTodoWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, task.HasTodoWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyTaskWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return task.And(predicates...), nil
+	}
+}
 
 // TodoWhereInput represents a where input for filtering Todo queries.
 type TodoWhereInput struct {
@@ -20,14 +239,14 @@ type TodoWhereInput struct {
 	And        []*TodoWhereInput `json:"and,omitempty"`
 
 	// "id" field predicates.
-	ID      *pulid.ID  `json:"id,omitempty"`
-	IDNEQ   *pulid.ID  `json:"idNEQ,omitempty"`
-	IDIn    []pulid.ID `json:"idIn,omitempty"`
-	IDNotIn []pulid.ID `json:"idNotIn,omitempty"`
-	IDGT    *pulid.ID  `json:"idGT,omitempty"`
-	IDGTE   *pulid.ID  `json:"idGTE,omitempty"`
-	IDLT    *pulid.ID  `json:"idLT,omitempty"`
-	IDLTE   *pulid.ID  `json:"idLTE,omitempty"`
+	ID      *types.ID  `json:"id,omitempty"`
+	IDNEQ   *types.ID  `json:"idNEQ,omitempty"`
+	IDIn    []types.ID `json:"idIn,omitempty"`
+	IDNotIn []types.ID `json:"idNotIn,omitempty"`
+	IDGT    *types.ID  `json:"idGT,omitempty"`
+	IDGTE   *types.ID  `json:"idGTE,omitempty"`
+	IDLT    *types.ID  `json:"idLT,omitempty"`
+	IDLTE   *types.ID  `json:"idLTE,omitempty"`
 
 	// "created_at" field predicates.
 	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
@@ -64,17 +283,32 @@ type TodoWhereInput struct {
 	TitleEqualFold    *string  `json:"titleEqualFold,omitempty"`
 	TitleContainsFold *string  `json:"titleContainsFold,omitempty"`
 
-	// "priority" field predicates.
-	Priority      *todo.Priority  `json:"priority,omitempty"`
-	PriorityNEQ   *todo.Priority  `json:"priorityNEQ,omitempty"`
-	PriorityIn    []todo.Priority `json:"priorityIn,omitempty"`
-	PriorityNotIn []todo.Priority `json:"priorityNotIn,omitempty"`
+	// "body" field predicates.
+	Body             *string  `json:"body,omitempty"`
+	BodyNEQ          *string  `json:"bodyNEQ,omitempty"`
+	BodyIn           []string `json:"bodyIn,omitempty"`
+	BodyNotIn        []string `json:"bodyNotIn,omitempty"`
+	BodyGT           *string  `json:"bodyGT,omitempty"`
+	BodyGTE          *string  `json:"bodyGTE,omitempty"`
+	BodyLT           *string  `json:"bodyLT,omitempty"`
+	BodyLTE          *string  `json:"bodyLTE,omitempty"`
+	BodyContains     *string  `json:"bodyContains,omitempty"`
+	BodyHasPrefix    *string  `json:"bodyHasPrefix,omitempty"`
+	BodyHasSuffix    *string  `json:"bodyHasSuffix,omitempty"`
+	BodyEqualFold    *string  `json:"bodyEqualFold,omitempty"`
+	BodyContainsFold *string  `json:"bodyContainsFold,omitempty"`
 
-	// "status" field predicates.
-	Status      *todo.Status  `json:"status,omitempty"`
-	StatusNEQ   *todo.Status  `json:"statusNEQ,omitempty"`
-	StatusIn    []todo.Status `json:"statusIn,omitempty"`
-	StatusNotIn []todo.Status `json:"statusNotIn,omitempty"`
+	// "item_priority" field predicates.
+	ItemPriority      *types.ItemPriority  `json:"itemPriority,omitempty"`
+	ItemPriorityNEQ   *types.ItemPriority  `json:"itemPriorityNEQ,omitempty"`
+	ItemPriorityIn    []types.ItemPriority `json:"itemPriorityIn,omitempty"`
+	ItemPriorityNotIn []types.ItemPriority `json:"itemPriorityNotIn,omitempty"`
+
+	// "item_status" field predicates.
+	ItemStatus      *types.ItemStatus  `json:"itemStatus,omitempty"`
+	ItemStatusNEQ   *types.ItemStatus  `json:"itemStatusNEQ,omitempty"`
+	ItemStatusIn    []types.ItemStatus `json:"itemStatusIn,omitempty"`
+	ItemStatusNotIn []types.ItemStatus `json:"itemStatusNotIn,omitempty"`
 
 	// "time_completed" field predicates.
 	TimeCompleted       *time.Time  `json:"timeCompleted,omitempty"`
@@ -91,6 +325,10 @@ type TodoWhereInput struct {
 	// "user" edge predicates.
 	HasUser     *bool             `json:"hasUser,omitempty"`
 	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+
+	// "tasks" edge predicates.
+	HasTasks     *bool             `json:"hasTasks,omitempty"`
+	HasTasksWith []*TaskWhereInput `json:"hasTasksWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -275,29 +513,68 @@ func (i *TodoWhereInput) P() (predicate.Todo, error) {
 	if i.TitleContainsFold != nil {
 		predicates = append(predicates, todo.TitleContainsFold(*i.TitleContainsFold))
 	}
-	if i.Priority != nil {
-		predicates = append(predicates, todo.PriorityEQ(*i.Priority))
+	if i.Body != nil {
+		predicates = append(predicates, todo.BodyEQ(*i.Body))
 	}
-	if i.PriorityNEQ != nil {
-		predicates = append(predicates, todo.PriorityNEQ(*i.PriorityNEQ))
+	if i.BodyNEQ != nil {
+		predicates = append(predicates, todo.BodyNEQ(*i.BodyNEQ))
 	}
-	if len(i.PriorityIn) > 0 {
-		predicates = append(predicates, todo.PriorityIn(i.PriorityIn...))
+	if len(i.BodyIn) > 0 {
+		predicates = append(predicates, todo.BodyIn(i.BodyIn...))
 	}
-	if len(i.PriorityNotIn) > 0 {
-		predicates = append(predicates, todo.PriorityNotIn(i.PriorityNotIn...))
+	if len(i.BodyNotIn) > 0 {
+		predicates = append(predicates, todo.BodyNotIn(i.BodyNotIn...))
 	}
-	if i.Status != nil {
-		predicates = append(predicates, todo.StatusEQ(*i.Status))
+	if i.BodyGT != nil {
+		predicates = append(predicates, todo.BodyGT(*i.BodyGT))
 	}
-	if i.StatusNEQ != nil {
-		predicates = append(predicates, todo.StatusNEQ(*i.StatusNEQ))
+	if i.BodyGTE != nil {
+		predicates = append(predicates, todo.BodyGTE(*i.BodyGTE))
 	}
-	if len(i.StatusIn) > 0 {
-		predicates = append(predicates, todo.StatusIn(i.StatusIn...))
+	if i.BodyLT != nil {
+		predicates = append(predicates, todo.BodyLT(*i.BodyLT))
 	}
-	if len(i.StatusNotIn) > 0 {
-		predicates = append(predicates, todo.StatusNotIn(i.StatusNotIn...))
+	if i.BodyLTE != nil {
+		predicates = append(predicates, todo.BodyLTE(*i.BodyLTE))
+	}
+	if i.BodyContains != nil {
+		predicates = append(predicates, todo.BodyContains(*i.BodyContains))
+	}
+	if i.BodyHasPrefix != nil {
+		predicates = append(predicates, todo.BodyHasPrefix(*i.BodyHasPrefix))
+	}
+	if i.BodyHasSuffix != nil {
+		predicates = append(predicates, todo.BodyHasSuffix(*i.BodyHasSuffix))
+	}
+	if i.BodyEqualFold != nil {
+		predicates = append(predicates, todo.BodyEqualFold(*i.BodyEqualFold))
+	}
+	if i.BodyContainsFold != nil {
+		predicates = append(predicates, todo.BodyContainsFold(*i.BodyContainsFold))
+	}
+	if i.ItemPriority != nil {
+		predicates = append(predicates, todo.ItemPriorityEQ(*i.ItemPriority))
+	}
+	if i.ItemPriorityNEQ != nil {
+		predicates = append(predicates, todo.ItemPriorityNEQ(*i.ItemPriorityNEQ))
+	}
+	if len(i.ItemPriorityIn) > 0 {
+		predicates = append(predicates, todo.ItemPriorityIn(i.ItemPriorityIn...))
+	}
+	if len(i.ItemPriorityNotIn) > 0 {
+		predicates = append(predicates, todo.ItemPriorityNotIn(i.ItemPriorityNotIn...))
+	}
+	if i.ItemStatus != nil {
+		predicates = append(predicates, todo.ItemStatusEQ(*i.ItemStatus))
+	}
+	if i.ItemStatusNEQ != nil {
+		predicates = append(predicates, todo.ItemStatusNEQ(*i.ItemStatusNEQ))
+	}
+	if len(i.ItemStatusIn) > 0 {
+		predicates = append(predicates, todo.ItemStatusIn(i.ItemStatusIn...))
+	}
+	if len(i.ItemStatusNotIn) > 0 {
+		predicates = append(predicates, todo.ItemStatusNotIn(i.ItemStatusNotIn...))
 	}
 	if i.TimeCompleted != nil {
 		predicates = append(predicates, todo.TimeCompletedEQ(*i.TimeCompleted))
@@ -348,6 +625,24 @@ func (i *TodoWhereInput) P() (predicate.Todo, error) {
 		}
 		predicates = append(predicates, todo.HasUserWith(with...))
 	}
+	if i.HasTasks != nil {
+		p := todo.HasTasks()
+		if !*i.HasTasks {
+			p = todo.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTasksWith) > 0 {
+		with := make([]predicate.Task, 0, len(i.HasTasksWith))
+		for _, w := range i.HasTasksWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTasksWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, todo.HasTasksWith(with...))
+	}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmptyTodoWhereInput
@@ -366,14 +661,14 @@ type UserWhereInput struct {
 	And        []*UserWhereInput `json:"and,omitempty"`
 
 	// "id" field predicates.
-	ID      *pulid.ID  `json:"id,omitempty"`
-	IDNEQ   *pulid.ID  `json:"idNEQ,omitempty"`
-	IDIn    []pulid.ID `json:"idIn,omitempty"`
-	IDNotIn []pulid.ID `json:"idNotIn,omitempty"`
-	IDGT    *pulid.ID  `json:"idGT,omitempty"`
-	IDGTE   *pulid.ID  `json:"idGTE,omitempty"`
-	IDLT    *pulid.ID  `json:"idLT,omitempty"`
-	IDLTE   *pulid.ID  `json:"idLTE,omitempty"`
+	ID      *types.ID  `json:"id,omitempty"`
+	IDNEQ   *types.ID  `json:"idNEQ,omitempty"`
+	IDIn    []types.ID `json:"idIn,omitempty"`
+	IDNotIn []types.ID `json:"idNotIn,omitempty"`
+	IDGT    *types.ID  `json:"idGT,omitempty"`
+	IDGTE   *types.ID  `json:"idGTE,omitempty"`
+	IDLT    *types.ID  `json:"idLT,omitempty"`
+	IDLTE   *types.ID  `json:"idLTE,omitempty"`
 
 	// "created_at" field predicates.
 	CreatedAt      *time.Time  `json:"createdAt,omitempty"`

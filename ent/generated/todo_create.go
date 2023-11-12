@@ -6,9 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
-	"lkuoch/ent-todo/ent/schema/types/pulid"
+	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 
 	"entgo.io/ent/dialect"
@@ -59,30 +60,36 @@ func (tc *TodoCreate) SetTitle(s string) *TodoCreate {
 	return tc
 }
 
-// SetPriority sets the "priority" field.
-func (tc *TodoCreate) SetPriority(t todo.Priority) *TodoCreate {
-	tc.mutation.SetPriority(t)
+// SetBody sets the "body" field.
+func (tc *TodoCreate) SetBody(s string) *TodoCreate {
+	tc.mutation.SetBody(s)
 	return tc
 }
 
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (tc *TodoCreate) SetNillablePriority(t *todo.Priority) *TodoCreate {
-	if t != nil {
-		tc.SetPriority(*t)
+// SetItemPriority sets the "item_priority" field.
+func (tc *TodoCreate) SetItemPriority(tp types.ItemPriority) *TodoCreate {
+	tc.mutation.SetItemPriority(tp)
+	return tc
+}
+
+// SetNillableItemPriority sets the "item_priority" field if the given value is not nil.
+func (tc *TodoCreate) SetNillableItemPriority(tp *types.ItemPriority) *TodoCreate {
+	if tp != nil {
+		tc.SetItemPriority(*tp)
 	}
 	return tc
 }
 
-// SetStatus sets the "status" field.
-func (tc *TodoCreate) SetStatus(t todo.Status) *TodoCreate {
-	tc.mutation.SetStatus(t)
+// SetItemStatus sets the "item_status" field.
+func (tc *TodoCreate) SetItemStatus(ts types.ItemStatus) *TodoCreate {
+	tc.mutation.SetItemStatus(ts)
 	return tc
 }
 
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (tc *TodoCreate) SetNillableStatus(t *todo.Status) *TodoCreate {
-	if t != nil {
-		tc.SetStatus(*t)
+// SetNillableItemStatus sets the "item_status" field if the given value is not nil.
+func (tc *TodoCreate) SetNillableItemStatus(ts *types.ItemStatus) *TodoCreate {
+	if ts != nil {
+		tc.SetItemStatus(*ts)
 	}
 	return tc
 }
@@ -102,36 +109,43 @@ func (tc *TodoCreate) SetNillableTimeCompleted(t *time.Time) *TodoCreate {
 }
 
 // SetID sets the "id" field.
-func (tc *TodoCreate) SetID(pu pulid.ID) *TodoCreate {
-	tc.mutation.SetID(pu)
+func (tc *TodoCreate) SetID(t types.ID) *TodoCreate {
+	tc.mutation.SetID(t)
 	return tc
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (tc *TodoCreate) SetNillableID(pu *pulid.ID) *TodoCreate {
-	if pu != nil {
-		tc.SetID(*pu)
+func (tc *TodoCreate) SetNillableID(t *types.ID) *TodoCreate {
+	if t != nil {
+		tc.SetID(*t)
 	}
 	return tc
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (tc *TodoCreate) SetUserID(id pulid.ID) *TodoCreate {
+func (tc *TodoCreate) SetUserID(id types.ID) *TodoCreate {
 	tc.mutation.SetUserID(id)
-	return tc
-}
-
-// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (tc *TodoCreate) SetNillableUserID(id *pulid.ID) *TodoCreate {
-	if id != nil {
-		tc = tc.SetUserID(*id)
-	}
 	return tc
 }
 
 // SetUser sets the "user" edge to the User entity.
 func (tc *TodoCreate) SetUser(u *User) *TodoCreate {
 	return tc.SetUserID(u.ID)
+}
+
+// AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
+func (tc *TodoCreate) AddTaskIDs(ids ...types.ID) *TodoCreate {
+	tc.mutation.AddTaskIDs(ids...)
+	return tc
+}
+
+// AddTasks adds the "tasks" edges to the Task entity.
+func (tc *TodoCreate) AddTasks(t ...*Task) *TodoCreate {
+	ids := make([]types.ID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTaskIDs(ids...)
 }
 
 // Mutation returns the TodoMutation object of the builder.
@@ -177,13 +191,13 @@ func (tc *TodoCreate) defaults() {
 		v := todo.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := tc.mutation.Priority(); !ok {
-		v := todo.DefaultPriority
-		tc.mutation.SetPriority(v)
+	if _, ok := tc.mutation.ItemPriority(); !ok {
+		v := todo.DefaultItemPriority
+		tc.mutation.SetItemPriority(v)
 	}
-	if _, ok := tc.mutation.Status(); !ok {
-		v := todo.DefaultStatus
-		tc.mutation.SetStatus(v)
+	if _, ok := tc.mutation.ItemStatus(); !ok {
+		v := todo.DefaultItemStatus
+		tc.mutation.SetItemStatus(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := todo.DefaultID()
@@ -207,21 +221,27 @@ func (tc *TodoCreate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`generated: validator failed for field "Todo.title": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Priority(); !ok {
-		return &ValidationError{Name: "priority", err: errors.New(`generated: missing required field "Todo.priority"`)}
+	if _, ok := tc.mutation.Body(); !ok {
+		return &ValidationError{Name: "body", err: errors.New(`generated: missing required field "Todo.body"`)}
 	}
-	if v, ok := tc.mutation.Priority(); ok {
-		if err := todo.PriorityValidator(v); err != nil {
-			return &ValidationError{Name: "priority", err: fmt.Errorf(`generated: validator failed for field "Todo.priority": %w`, err)}
+	if _, ok := tc.mutation.ItemPriority(); !ok {
+		return &ValidationError{Name: "item_priority", err: errors.New(`generated: missing required field "Todo.item_priority"`)}
+	}
+	if v, ok := tc.mutation.ItemPriority(); ok {
+		if err := todo.ItemPriorityValidator(v); err != nil {
+			return &ValidationError{Name: "item_priority", err: fmt.Errorf(`generated: validator failed for field "Todo.item_priority": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`generated: missing required field "Todo.status"`)}
+	if _, ok := tc.mutation.ItemStatus(); !ok {
+		return &ValidationError{Name: "item_status", err: errors.New(`generated: missing required field "Todo.item_status"`)}
 	}
-	if v, ok := tc.mutation.Status(); ok {
-		if err := todo.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`generated: validator failed for field "Todo.status": %w`, err)}
+	if v, ok := tc.mutation.ItemStatus(); ok {
+		if err := todo.ItemStatusValidator(v); err != nil {
+			return &ValidationError{Name: "item_status", err: fmt.Errorf(`generated: validator failed for field "Todo.item_status": %w`, err)}
 		}
+	}
+	if _, ok := tc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`generated: missing required edge "Todo.user"`)}
 	}
 	return nil
 }
@@ -238,7 +258,7 @@ func (tc *TodoCreate) sqlSave(ctx context.Context) (*Todo, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*pulid.ID); ok {
+		if id, ok := _spec.ID.Value.(*types.ID); ok {
 			_node.ID = *id
 		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
 			return nil, err
@@ -271,13 +291,17 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 		_spec.SetField(todo.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := tc.mutation.Priority(); ok {
-		_spec.SetField(todo.FieldPriority, field.TypeEnum, value)
-		_node.Priority = value
+	if value, ok := tc.mutation.Body(); ok {
+		_spec.SetField(todo.FieldBody, field.TypeString, value)
+		_node.Body = &value
 	}
-	if value, ok := tc.mutation.Status(); ok {
-		_spec.SetField(todo.FieldStatus, field.TypeEnum, value)
-		_node.Status = value
+	if value, ok := tc.mutation.ItemPriority(); ok {
+		_spec.SetField(todo.FieldItemPriority, field.TypeEnum, value)
+		_node.ItemPriority = value
+	}
+	if value, ok := tc.mutation.ItemStatus(); ok {
+		_spec.SetField(todo.FieldItemStatus, field.TypeEnum, value)
+		_node.ItemStatus = value
 	}
 	if value, ok := tc.mutation.TimeCompleted(); ok {
 		_spec.SetField(todo.FieldTimeCompleted, field.TypeTime, value)
@@ -298,6 +322,22 @@ func (tc *TodoCreate) createSpec() (*Todo, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_todos = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   todo.TasksTable,
+			Columns: []string{todo.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -376,27 +416,39 @@ func (u *TodoUpsert) UpdateTitle() *TodoUpsert {
 	return u
 }
 
-// SetPriority sets the "priority" field.
-func (u *TodoUpsert) SetPriority(v todo.Priority) *TodoUpsert {
-	u.Set(todo.FieldPriority, v)
+// SetBody sets the "body" field.
+func (u *TodoUpsert) SetBody(v string) *TodoUpsert {
+	u.Set(todo.FieldBody, v)
 	return u
 }
 
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *TodoUpsert) UpdatePriority() *TodoUpsert {
-	u.SetExcluded(todo.FieldPriority)
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *TodoUpsert) UpdateBody() *TodoUpsert {
+	u.SetExcluded(todo.FieldBody)
 	return u
 }
 
-// SetStatus sets the "status" field.
-func (u *TodoUpsert) SetStatus(v todo.Status) *TodoUpsert {
-	u.Set(todo.FieldStatus, v)
+// SetItemPriority sets the "item_priority" field.
+func (u *TodoUpsert) SetItemPriority(v types.ItemPriority) *TodoUpsert {
+	u.Set(todo.FieldItemPriority, v)
 	return u
 }
 
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *TodoUpsert) UpdateStatus() *TodoUpsert {
-	u.SetExcluded(todo.FieldStatus)
+// UpdateItemPriority sets the "item_priority" field to the value that was provided on create.
+func (u *TodoUpsert) UpdateItemPriority() *TodoUpsert {
+	u.SetExcluded(todo.FieldItemPriority)
+	return u
+}
+
+// SetItemStatus sets the "item_status" field.
+func (u *TodoUpsert) SetItemStatus(v types.ItemStatus) *TodoUpsert {
+	u.Set(todo.FieldItemStatus, v)
+	return u
+}
+
+// UpdateItemStatus sets the "item_status" field to the value that was provided on create.
+func (u *TodoUpsert) UpdateItemStatus() *TodoUpsert {
+	u.SetExcluded(todo.FieldItemStatus)
 	return u
 }
 
@@ -497,31 +549,45 @@ func (u *TodoUpsertOne) UpdateTitle() *TodoUpsertOne {
 	})
 }
 
-// SetPriority sets the "priority" field.
-func (u *TodoUpsertOne) SetPriority(v todo.Priority) *TodoUpsertOne {
+// SetBody sets the "body" field.
+func (u *TodoUpsertOne) SetBody(v string) *TodoUpsertOne {
 	return u.Update(func(s *TodoUpsert) {
-		s.SetPriority(v)
+		s.SetBody(v)
 	})
 }
 
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *TodoUpsertOne) UpdatePriority() *TodoUpsertOne {
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *TodoUpsertOne) UpdateBody() *TodoUpsertOne {
 	return u.Update(func(s *TodoUpsert) {
-		s.UpdatePriority()
+		s.UpdateBody()
 	})
 }
 
-// SetStatus sets the "status" field.
-func (u *TodoUpsertOne) SetStatus(v todo.Status) *TodoUpsertOne {
+// SetItemPriority sets the "item_priority" field.
+func (u *TodoUpsertOne) SetItemPriority(v types.ItemPriority) *TodoUpsertOne {
 	return u.Update(func(s *TodoUpsert) {
-		s.SetStatus(v)
+		s.SetItemPriority(v)
 	})
 }
 
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *TodoUpsertOne) UpdateStatus() *TodoUpsertOne {
+// UpdateItemPriority sets the "item_priority" field to the value that was provided on create.
+func (u *TodoUpsertOne) UpdateItemPriority() *TodoUpsertOne {
 	return u.Update(func(s *TodoUpsert) {
-		s.UpdateStatus()
+		s.UpdateItemPriority()
+	})
+}
+
+// SetItemStatus sets the "item_status" field.
+func (u *TodoUpsertOne) SetItemStatus(v types.ItemStatus) *TodoUpsertOne {
+	return u.Update(func(s *TodoUpsert) {
+		s.SetItemStatus(v)
+	})
+}
+
+// UpdateItemStatus sets the "item_status" field to the value that was provided on create.
+func (u *TodoUpsertOne) UpdateItemStatus() *TodoUpsertOne {
+	return u.Update(func(s *TodoUpsert) {
+		s.UpdateItemStatus()
 	})
 }
 
@@ -562,7 +628,7 @@ func (u *TodoUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *TodoUpsertOne) ID(ctx context.Context) (id pulid.ID, err error) {
+func (u *TodoUpsertOne) ID(ctx context.Context) (id types.ID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -576,7 +642,7 @@ func (u *TodoUpsertOne) ID(ctx context.Context) (id pulid.ID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *TodoUpsertOne) IDX(ctx context.Context) pulid.ID {
+func (u *TodoUpsertOne) IDX(ctx context.Context) types.ID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -792,31 +858,45 @@ func (u *TodoUpsertBulk) UpdateTitle() *TodoUpsertBulk {
 	})
 }
 
-// SetPriority sets the "priority" field.
-func (u *TodoUpsertBulk) SetPriority(v todo.Priority) *TodoUpsertBulk {
+// SetBody sets the "body" field.
+func (u *TodoUpsertBulk) SetBody(v string) *TodoUpsertBulk {
 	return u.Update(func(s *TodoUpsert) {
-		s.SetPriority(v)
+		s.SetBody(v)
 	})
 }
 
-// UpdatePriority sets the "priority" field to the value that was provided on create.
-func (u *TodoUpsertBulk) UpdatePriority() *TodoUpsertBulk {
+// UpdateBody sets the "body" field to the value that was provided on create.
+func (u *TodoUpsertBulk) UpdateBody() *TodoUpsertBulk {
 	return u.Update(func(s *TodoUpsert) {
-		s.UpdatePriority()
+		s.UpdateBody()
 	})
 }
 
-// SetStatus sets the "status" field.
-func (u *TodoUpsertBulk) SetStatus(v todo.Status) *TodoUpsertBulk {
+// SetItemPriority sets the "item_priority" field.
+func (u *TodoUpsertBulk) SetItemPriority(v types.ItemPriority) *TodoUpsertBulk {
 	return u.Update(func(s *TodoUpsert) {
-		s.SetStatus(v)
+		s.SetItemPriority(v)
 	})
 }
 
-// UpdateStatus sets the "status" field to the value that was provided on create.
-func (u *TodoUpsertBulk) UpdateStatus() *TodoUpsertBulk {
+// UpdateItemPriority sets the "item_priority" field to the value that was provided on create.
+func (u *TodoUpsertBulk) UpdateItemPriority() *TodoUpsertBulk {
 	return u.Update(func(s *TodoUpsert) {
-		s.UpdateStatus()
+		s.UpdateItemPriority()
+	})
+}
+
+// SetItemStatus sets the "item_status" field.
+func (u *TodoUpsertBulk) SetItemStatus(v types.ItemStatus) *TodoUpsertBulk {
+	return u.Update(func(s *TodoUpsert) {
+		s.SetItemStatus(v)
+	})
+}
+
+// UpdateItemStatus sets the "item_status" field to the value that was provided on create.
+func (u *TodoUpsertBulk) UpdateItemStatus() *TodoUpsertBulk {
+	return u.Update(func(s *TodoUpsert) {
+		s.UpdateItemStatus()
 	})
 }
 

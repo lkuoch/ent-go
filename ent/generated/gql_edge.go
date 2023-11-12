@@ -8,12 +8,41 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+func (t *Task) Todo(ctx context.Context) (*Todo, error) {
+	result, err := t.Edges.TodoOrErr()
+	if IsNotLoaded(err) {
+		result, err = t.QueryTodo().Only(ctx)
+	}
+	return result, err
+}
+
 func (t *Todo) User(ctx context.Context) (*User, error) {
 	result, err := t.Edges.UserOrErr()
 	if IsNotLoaded(err) {
 		result, err = t.QueryUser().Only(ctx)
 	}
-	return result, MaskNotFound(err)
+	return result, err
+}
+
+func (t *Todo) Tasks(
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy []*TaskOrder, where *TaskWhereInput,
+) (*TaskConnection, error) {
+	opts := []TaskPaginateOption{
+		WithTaskOrder(orderBy),
+		WithTaskFilter(where.Filter),
+	}
+	alias := graphql.GetFieldContext(ctx).Field.Alias
+	totalCount, hasTotalCount := t.Edges.totalCount[1][alias]
+	if nodes, err := t.NamedTasks(alias); err == nil || hasTotalCount {
+		pager, err := newTaskPager(opts, last != nil)
+		if err != nil {
+			return nil, err
+		}
+		conn := &TaskConnection{Edges: []*TaskEdge{}, TotalCount: totalCount}
+		conn.build(nodes, pager, after, first, before, last)
+		return conn, nil
+	}
+	return t.QueryTasks().Paginate(ctx, after, first, before, last, opts...)
 }
 
 func (u *User) Todos(

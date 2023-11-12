@@ -20,6 +20,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input generated.Creat
 	return r.client.User.Create().SetInput(input).Save(ctx)
 }
 
+// CreateTask is the resolver for the createTask field.
+func (r *mutationResolver) CreateTask(ctx context.Context, input generated.CreateTaskInput) (*generated.Task, error) {
+	return r.client.Task.Create().SetInput(input).Save(ctx)
+}
+
 // Mutation returns gql.MutationResolver implementation.
 func (r *Resolver) Mutation() gql.MutationResolver { return &mutationResolver{r} }
 
