@@ -37,6 +37,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	CreateTodoInput() CreateTodoInputResolver
 }
 
 type DirectiveRoot struct {
@@ -47,6 +48,12 @@ type ComplexityRoot struct {
 		CreateTask func(childComplexity int, input generated.CreateTaskInput) int
 		CreateTodo func(childComplexity int, input generated.CreateTodoInput) int
 		CreateUser func(childComplexity int, input generated.CreateUserInput) int
+		DeleteTask func(childComplexity int, id types.ID) int
+		DeleteTodo func(childComplexity int, id types.ID) int
+		DeleteUser func(childComplexity int, id types.ID) int
+		UpdateTask func(childComplexity int, id types.ID, input generated.UpdateTaskInput) int
+		UpdateTodo func(childComplexity int, id types.ID, input generated.UpdateTodoInput) int
+		UpdateUser func(childComplexity int, id types.ID, input generated.UpdateUserInput) int
 	}
 
 	PageInfo struct {
@@ -181,6 +188,78 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(generated.CreateUserInput)), true
+
+	case "Mutation.deleteTask":
+		if e.complexity.Mutation.DeleteTask == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteTask_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteTask(childComplexity, args["id"].(types.ID)), true
+
+	case "Mutation.deleteTodo":
+		if e.complexity.Mutation.DeleteTodo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteTodo_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteTodo(childComplexity, args["id"].(types.ID)), true
+
+	case "Mutation.deleteUser":
+		if e.complexity.Mutation.DeleteUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(types.ID)), true
+
+	case "Mutation.updateTask":
+		if e.complexity.Mutation.UpdateTask == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateTask_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateTask(childComplexity, args["id"].(types.ID), args["input"].(generated.UpdateTaskInput)), true
+
+	case "Mutation.updateTodo":
+		if e.complexity.Mutation.UpdateTodo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateTodo_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateTodo(childComplexity, args["id"].(types.ID), args["input"].(generated.UpdateTodoInput)), true
+
+	case "Mutation.updateUser":
+		if e.complexity.Mutation.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(types.ID), args["input"].(generated.UpdateUserInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -1187,10 +1266,22 @@ input UserWhereInput {
 	{Name: "../../../typedef.graphql", Input: `# All custom graphql definitions go here.
 # Types from ` + "`" + `ent.graphql` + "`" + ` are referenced here
 
+extend input CreateTodoInput {
+  createTasks: [CreateTodoInput!]
+}
+
 type Mutation {
-  createTodo(input: CreateTodoInput!): Todo
-  createUser(input: CreateUserInput!): User
-  createTask(input: CreateTaskInput!): Task
+  createTodo(input: CreateTodoInput!): Todo!
+  updateTodo(id: ID!, input: UpdateTodoInput!): Todo!
+  deleteTodo(id: ID!): ID!
+
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): ID!
+
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): ID!
 }
 `, BuiltIn: false},
 }

@@ -50,4 +50,8 @@ func (r *queryResolver) Users(ctx context.Context, after *entgql.Cursor[types.ID
 // Query returns gql.QueryResolver implementation.
 func (r *Resolver) Query() gql.QueryResolver { return &queryResolver{r} }
 
+// CreateTodoInput returns gql.CreateTodoInputResolver implementation.
+func (r *Resolver) CreateTodoInput() gql.CreateTodoInputResolver { return &createTodoInputResolver{r} }
+
 type queryResolver struct{ *Resolver }
+type createTodoInputResolver struct{ *Resolver }

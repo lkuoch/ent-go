@@ -29,6 +29,10 @@ type QueryResolver interface {
 	Users(ctx context.Context, after *entgql.Cursor[types.ID], first *int, before *entgql.Cursor[types.ID], last *int, orderBy []*generated.UserOrder, where *generated.UserWhereInput) (*generated.UserConnection, error)
 }
 
+type CreateTodoInputResolver interface {
+	CreateTasks(ctx context.Context, obj *generated.CreateTodoInput, data []*generated.CreateTodoInput) error
+}
+
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
@@ -2726,7 +2730,7 @@ func (ec *executionContext) unmarshalInputCreateTodoInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "title", "body", "itemPriority", "itemStatus", "timeCompleted", "userID", "taskIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "title", "body", "itemPriority", "itemStatus", "timeCompleted", "userID", "taskIDs", "createTasks"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2814,6 +2818,17 @@ func (ec *executionContext) unmarshalInputCreateTodoInput(ctx context.Context, o
 				return it, err
 			}
 			it.TaskIDs = data
+		case "createTasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTasks"))
+			data, err := ec.unmarshalOCreateTodoInput2ᚕᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateTodoInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CreateTodoInput().CreateTasks(ctx, &it, data); err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5586,6 +5601,11 @@ func (ec *executionContext) unmarshalNCreateTodoInput2lkuochᚋentᚑtodoᚋent�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateTodoInput2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateTodoInput(ctx context.Context, v interface{}) (*generated.CreateTodoInput, error) {
+	res, err := ec.unmarshalInputCreateTodoInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateUserInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateUserInput(ctx context.Context, v interface{}) (generated.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5663,6 +5683,20 @@ func (ec *executionContext) marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPag
 	return ec._PageInfo(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNTask2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐTask(ctx context.Context, sel ast.SelectionSet, v generated.Task) graphql.Marshaler {
+	return ec._Task(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTask2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐTask(ctx context.Context, sel ast.SelectionSet, v *generated.Task) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Task(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNTaskConnection2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐTaskConnection(ctx context.Context, sel ast.SelectionSet, v generated.TaskConnection) graphql.Marshaler {
 	return ec._TaskConnection(ctx, sel, &v)
 }
@@ -5716,6 +5750,10 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTodo2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐTodo(ctx context.Context, sel ast.SelectionSet, v generated.Todo) graphql.Marshaler {
+	return ec._Todo(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTodo2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐTodo(ctx context.Context, sel ast.SelectionSet, v *generated.Todo) graphql.Marshaler {
@@ -5778,6 +5816,25 @@ func (ec *executionContext) unmarshalNTodoWhereInput2ᚖlkuochᚋentᚑtodoᚋen
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateTaskInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐUpdateTaskInput(ctx context.Context, v interface{}) (generated.UpdateTaskInput, error) {
+	res, err := ec.unmarshalInputUpdateTaskInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateTodoInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐUpdateTodoInput(ctx context.Context, v interface{}) (generated.UpdateTodoInput, error) {
+	res, err := ec.unmarshalInputUpdateTodoInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserInput2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐUpdateUserInput(ctx context.Context, v interface{}) (generated.UpdateUserInput, error) {
+	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUser2lkuochᚋentᚑtodoᚋentᚋgeneratedᚐUser(ctx context.Context, sel ast.SelectionSet, v generated.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNUser2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐUser(ctx context.Context, sel ast.SelectionSet, v *generated.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5826,6 +5883,26 @@ func (ec *executionContext) marshalNUserOrderField2ᚖlkuochᚋentᚑtodoᚋent�
 func (ec *executionContext) unmarshalNUserWhereInput2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐUserWhereInput(ctx context.Context, v interface{}) (*generated.UserWhereInput, error) {
 	res, err := ec.unmarshalInputUserWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOCreateTodoInput2ᚕᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateTodoInputᚄ(ctx context.Context, v interface{}) ([]*generated.CreateTodoInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*generated.CreateTodoInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateTodoInput2ᚖlkuochᚋentᚑtodoᚋentᚋgeneratedᚐCreateTodoInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor(ctx context.Context, v interface{}) (*entgql.Cursor[types.ID], error) {

@@ -7,7 +7,6 @@ import (
 	"hash/fnv"
 	"io"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -16,18 +15,13 @@ import (
 // PULID is a ULID prefixed with the hash of the table name to support the node interface
 type ID string
 
-var defaultEntropySource *ulid.MonotonicEntropy
+var defaultEntropySource *ulid.MonotonicEntropy = ulid.Monotonic(rand.Reader, 0)
 
 func hash64(input string) uint64 {
 	hasher := fnv.New64a()
 	hasher.Write([]byte(input))
 
 	return hasher.Sum64()
-}
-
-func init() {
-	// Seed the default entropy source
-	defaultEntropySource = ulid.Monotonic(rand.Reader, 0)
 }
 
 // Generates a new ULID from the table name
@@ -41,13 +35,6 @@ func New(tableName string) ID {
 
 func NewPrefix(tableName string) string {
 	return fmt.Sprintf("%x", hash64(tableName))
-}
-
-func ExtractPrefixHash(id ID) string {
-	tuple := strings.Split(string(id), ":")
-	prefix := tuple[0]
-
-	return prefix
 }
 
 // Scan implements the Scanner interface.

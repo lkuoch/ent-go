@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 )
 
@@ -51,5 +52,12 @@ func (a Annotation) Name() string {
 func (i IdMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		Annotation{Prefix: types.NewPrefix(i.tableName)},
+	}
+}
+
+// Indexes of the Todo
+func (IdMixin) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("id").Unique(),
 	}
 }

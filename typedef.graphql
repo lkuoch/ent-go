@@ -1,8 +1,20 @@
 # All custom graphql definitions go here.
 # Types from `ent.graphql` are referenced here
 
+extend input CreateTodoInput {
+  createTasks: [CreateTodoInput!]
+}
+
 type Mutation {
-  createTodo(input: CreateTodoInput!): Todo
-  createUser(input: CreateUserInput!): User
-  createTask(input: CreateTaskInput!): Task
+  createTodo(input: CreateTodoInput!): Todo!
+  updateTodo(id: ID!, input: UpdateTodoInput!): Todo!
+  deleteTodo(id: ID!): ID!
+
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): ID!
+
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): ID!
 }

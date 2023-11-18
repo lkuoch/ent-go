@@ -68,6 +68,7 @@ erDiagram
 - [x] Setup migrations
 - [x] Setup Relay Node Interface
 - [x] Setup relations
-- [x] Setup more tables + operations
+- [x] Setup more tables
+- [x] Setup more operations
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy

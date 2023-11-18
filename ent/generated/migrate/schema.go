@@ -31,6 +31,11 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
+				Name:    "task_id",
+				Unique:  true,
+				Columns: []*schema.Column{TaskColumns[0]},
+			},
+			{
 				Name:    "task_title_item_status",
 				Unique:  false,
 				Columns: []*schema.Column{TaskColumns[1], TaskColumns[2]},
@@ -64,6 +69,11 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
+				Name:    "todo_id",
+				Unique:  true,
+				Columns: []*schema.Column{TodoColumns[0]},
+			},
+			{
 				Name:    "todo_title_item_priority_item_status",
 				Unique:  false,
 				Columns: []*schema.Column{TodoColumns[3], TodoColumns[5], TodoColumns[6]},
@@ -84,6 +94,11 @@ var (
 		Columns:    UserColumns,
 		PrimaryKey: []*schema.Column{UserColumns[0]},
 		Indexes: []*schema.Index{
+			{
+				Name:    "user_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserColumns[0]},
+			},
 			{
 				Name:    "user_display_name",
 				Unique:  false,

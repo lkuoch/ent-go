@@ -8,21 +8,87 @@ import (
 	"context"
 	"lkuoch/ent-todo/ent/generated"
 	"lkuoch/ent-todo/ent/generated/gql"
+	"lkuoch/ent-todo/ent/schema/types"
 )
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input generated.CreateTodoInput) (*generated.Todo, error) {
-	return r.client.Todo.Create().SetInput(input).Save(ctx)
+	client := generated.FromContext(ctx)
+	return client.Todo.Create().SetInput(input).Save(ctx)
+}
+
+// UpdateTodo is the resolver for the updateTodo field.
+func (r *mutationResolver) UpdateTodo(ctx context.Context, id types.ID, input generated.UpdateTodoInput) (*generated.Todo, error) {
+	client := generated.FromContext(ctx)
+	return client.Todo.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
+// DeleteTodo is the resolver for the deleteTodo field.
+func (r *mutationResolver) DeleteTodo(ctx context.Context, id types.ID) (types.ID, error) {
+	client := generated.FromContext(ctx)
+	err := client.Todo.DeleteOneID(id).Exec(ctx)
+
+	return id, err
 }
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input generated.CreateUserInput) (*generated.User, error) {
-	return r.client.User.Create().SetInput(input).Save(ctx)
+	client := generated.FromContext(ctx)
+	return client.User.Create().SetInput(input).Save(ctx)
+}
+
+// UpdateUser is the resolver for the updateUser field.
+func (r *mutationResolver) UpdateUser(ctx context.Context, id types.ID, input generated.UpdateUserInput) (*generated.User, error) {
+	client := generated.FromContext(ctx)
+	return client.User.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
+// DeleteUser is the resolver for the deleteUser field.
+func (r *mutationResolver) DeleteUser(ctx context.Context, id types.ID) (types.ID, error) {
+	client := generated.FromContext(ctx)
+	err := client.User.DeleteOneID(id).Exec(ctx)
+
+	return id, err
 }
 
 // CreateTask is the resolver for the createTask field.
 func (r *mutationResolver) CreateTask(ctx context.Context, input generated.CreateTaskInput) (*generated.Task, error) {
-	return r.client.Task.Create().SetInput(input).Save(ctx)
+	client := generated.FromContext(ctx)
+	return client.Task.Create().SetInput(input).Save(ctx)
+}
+
+// UpdateTask is the resolver for the updateTask field.
+func (r *mutationResolver) UpdateTask(ctx context.Context, id types.ID, input generated.UpdateTaskInput) (*generated.Task, error) {
+	client := generated.FromContext(ctx)
+	return client.Task.UpdateOneID(id).SetInput(input).Save(ctx)
+}
+
+// DeleteTask is the resolver for the deleteTask field.
+func (r *mutationResolver) DeleteTask(ctx context.Context, id types.ID) (types.ID, error) {
+	client := generated.FromContext(ctx)
+	err := client.Task.DeleteOneID(id).Exec(ctx)
+
+	return id, err
+}
+
+// CreateTasks is the resolver for the createTasks field.
+func (r *createTodoInputResolver) CreateTasks(ctx context.Context, obj *generated.CreateTodoInput, data []*generated.CreateTodoInput) error {
+	client := generated.FromContext(ctx)
+	builders := make([]*generated.TodoCreate, len(data))
+	for i := range data {
+		builders[i] = client.Todo.Create().SetInput(*data[i])
+	}
+	todos, err := client.Todo.CreateBulk(builders...).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]types.ID, len(todos))
+	for i := range todos {
+		ids[i] = todos[i].ID
+	}
+	obj.TaskIDs = append(obj.TaskIDs, ids...)
+	return nil
 }
 
 // Mutation returns gql.MutationResolver implementation.

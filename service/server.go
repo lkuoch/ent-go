@@ -8,6 +8,7 @@ import (
 	ent "lkuoch/ent-todo/ent/generated"
 	gql "lkuoch/ent-todo/ent/resolvers"
 
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -30,6 +31,7 @@ func main() {
 
 	// Configure the server and start listening on :8081.
 	srv := handler.NewDefaultServer(gql.NewSchema(client))
+	srv.Use(entgql.Transactioner{TxOpener: client})
 	http.Handle("/",
 		playground.Handler("Todo", "/query"),
 	)
