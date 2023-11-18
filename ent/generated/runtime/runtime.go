@@ -5,6 +5,6 @@ package runtime
 // The schema-stitching logic is generated in lkuoch/ent-todo/ent/generated/runtime.go
 
 const (
-	Version = "v0.12.4"                                         // Version of ent codegen.
-	Sum     = "h1:LddPnAyxls/O7DTXZvUGDj0NZIdGSu317+aoNLJWbD8=" // Sum of ent codegen.
+	Version = "v0.12.6-0.20231116073927-4640d8e0ece3"           // Version of ent codegen.
+	Sum     = "h1:SJStMcxcnZYZIQW1UMKD4WjnUaAkbnVTZ7fSJD7l1aw=" // Sum of ent codegen.
 )

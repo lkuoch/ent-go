@@ -8,6 +8,18 @@ import (
 	"lkuoch/ent-todo/ent/generated"
 )
 
+// The RemoteFunc type is an adapter to allow the use of ordinary
+// function as Remote mutator.
+type RemoteFunc func(context.Context, *generated.RemoteMutation) (generated.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RemoteFunc) Mutate(ctx context.Context, m generated.Mutation) (generated.Value, error) {
+	if mv, ok := m.(*generated.RemoteMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *generated.RemoteMutation", m)
+}
+
 // The TaskFunc type is an adapter to allow the use of ordinary
 // function as Task mutator.
 type TaskFunc func(context.Context, *generated.TaskMutation) (generated.Value, error)

@@ -12,6 +12,7 @@ import (
 	"lkuoch/ent-todo/ent/generated/migrate"
 	"lkuoch/ent-todo/ent/schema/types"
 
+	"lkuoch/ent-todo/ent/generated/remote"
 	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
@@ -27,6 +28,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Remote is the client for interacting with the Remote builders.
+	Remote *RemoteClient
 	// Task is the client for interacting with the Task builders.
 	Task *TaskClient
 	// Todo is the client for interacting with the Todo builders.
@@ -37,15 +40,14 @@ type Client struct {
 
 // NewClient creates a new client configured with the given options.
 func NewClient(opts ...Option) *Client {
-	cfg := config{log: log.Println, hooks: &hooks{}, inters: &inters{}}
-	cfg.options(opts...)
-	client := &Client{config: cfg}
+	client := &Client{config: newConfig(opts...)}
 	client.init()
 	return client
 }
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Remote = NewRemoteClient(c.config)
 	c.Task = NewTaskClient(c.config)
 	c.Todo = NewTodoClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -68,6 +70,13 @@ type (
 	// Option function to configure the client.
 	Option func(*config)
 )
+
+// newConfig creates a new config for the client.
+func newConfig(opts ...Option) config {
+	cfg := config{log: log.Println, hooks: &hooks{}, inters: &inters{}}
+	cfg.options(opts...)
+	return cfg
+}
 
 // options applies the options on the config object.
 func (c *config) options(opts ...Option) {
@@ -134,6 +143,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Remote: NewRemoteClient(cfg),
 		Task:   NewTaskClient(cfg),
 		Todo:   NewTodoClient(cfg),
 		User:   NewUserClient(cfg),
@@ -156,6 +166,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Remote: NewRemoteClient(cfg),
 		Task:   NewTaskClient(cfg),
 		Todo:   NewTodoClient(cfg),
 		User:   NewUserClient(cfg),
@@ -165,7 +176,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Task.
+//		Remote.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -187,6 +198,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Remote.Use(hooks...)
 	c.Task.Use(hooks...)
 	c.Todo.Use(hooks...)
 	c.User.Use(hooks...)
@@ -195,6 +207,7 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Remote.Intercept(interceptors...)
 	c.Task.Intercept(interceptors...)
 	c.Todo.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
@@ -203,6 +216,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *RemoteMutation:
+		return c.Remote.mutate(ctx, m)
 	case *TaskMutation:
 		return c.Task.mutate(ctx, m)
 	case *TodoMutation:
@@ -211,6 +226,139 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("generated: unknown mutation type %T", m)
+	}
+}
+
+// RemoteClient is a client for the Remote schema.
+type RemoteClient struct {
+	config
+}
+
+// NewRemoteClient returns a client for the Remote from the given config.
+func NewRemoteClient(c config) *RemoteClient {
+	return &RemoteClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `remote.Hooks(f(g(h())))`.
+func (c *RemoteClient) Use(hooks ...Hook) {
+	c.hooks.Remote = append(c.hooks.Remote, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `remote.Intercept(f(g(h())))`.
+func (c *RemoteClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Remote = append(c.inters.Remote, interceptors...)
+}
+
+// Create returns a builder for creating a Remote entity.
+func (c *RemoteClient) Create() *RemoteCreate {
+	mutation := newRemoteMutation(c.config, OpCreate)
+	return &RemoteCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Remote entities.
+func (c *RemoteClient) CreateBulk(builders ...*RemoteCreate) *RemoteCreateBulk {
+	return &RemoteCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RemoteClient) MapCreateBulk(slice any, setFunc func(*RemoteCreate, int)) *RemoteCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RemoteCreateBulk{err: fmt.Errorf("calling to RemoteClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RemoteCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RemoteCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Remote.
+func (c *RemoteClient) Update() *RemoteUpdate {
+	mutation := newRemoteMutation(c.config, OpUpdate)
+	return &RemoteUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RemoteClient) UpdateOne(r *Remote) *RemoteUpdateOne {
+	mutation := newRemoteMutation(c.config, OpUpdateOne, withRemote(r))
+	return &RemoteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RemoteClient) UpdateOneID(id types.ID) *RemoteUpdateOne {
+	mutation := newRemoteMutation(c.config, OpUpdateOne, withRemoteID(id))
+	return &RemoteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Remote.
+func (c *RemoteClient) Delete() *RemoteDelete {
+	mutation := newRemoteMutation(c.config, OpDelete)
+	return &RemoteDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RemoteClient) DeleteOne(r *Remote) *RemoteDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RemoteClient) DeleteOneID(id types.ID) *RemoteDeleteOne {
+	builder := c.Delete().Where(remote.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RemoteDeleteOne{builder}
+}
+
+// Query returns a query builder for Remote.
+func (c *RemoteClient) Query() *RemoteQuery {
+	return &RemoteQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRemote},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Remote entity by its id.
+func (c *RemoteClient) Get(ctx context.Context, id types.ID) (*Remote, error) {
+	return c.Query().Where(remote.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RemoteClient) GetX(ctx context.Context, id types.ID) *Remote {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RemoteClient) Hooks() []Hook {
+	return c.hooks.Remote
+}
+
+// Interceptors returns the client interceptors.
+func (c *RemoteClient) Interceptors() []Interceptor {
+	return c.inters.Remote
+}
+
+func (c *RemoteClient) mutate(ctx context.Context, m *RemoteMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RemoteCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RemoteUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RemoteUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RemoteDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("generated: unknown Remote mutation op: %q", m.Op())
 	}
 }
 
@@ -680,9 +828,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Task, Todo, User []ent.Hook
+		Remote, Task, Todo, User []ent.Hook
 	}
 	inters struct {
-		Task, Todo, User []ent.Interceptor
+		Remote, Task, Todo, User []ent.Interceptor
 	}
 )

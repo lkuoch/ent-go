@@ -5,6 +5,7 @@ package generated
 import (
 	"context"
 	"fmt"
+	"lkuoch/ent-todo/ent/generated/remote"
 	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
@@ -20,14 +21,25 @@ type Noder interface {
 	IsNode()
 }
 
-// IsNode implements the Node interface check for GQLGen.
-func (n *Task) IsNode() {}
+var remoteImplementors = []string{"Remote", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
-func (n *Todo) IsNode() {}
+func (*Remote) IsNode() {}
+
+var taskImplementors = []string{"Task", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
-func (n *User) IsNode() {}
+func (*Task) IsNode() {}
+
+var todoImplementors = []string{"Todo", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*Todo) IsNode() {}
+
+var userImplementors = []string{"User", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*User) IsNode() {}
 
 var errNodeInvalidID = &NotFoundError{"node"}
 
@@ -87,6 +99,22 @@ func (c *Client) Noder(ctx context.Context, id types.ID, opts ...NodeOption) (_ 
 
 func (c *Client) noder(ctx context.Context, table string, id types.ID) (Noder, error) {
 	switch table {
+	case remote.Table:
+		var uid types.ID
+		if err := uid.UnmarshalGQL(id); err != nil {
+			return nil, err
+		}
+		query := c.Remote.Query().
+			Where(remote.ID(uid))
+		query, err := query.CollectFields(ctx, remoteImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
 	case task.Table:
 		var uid types.ID
 		if err := uid.UnmarshalGQL(id); err != nil {
@@ -94,7 +122,7 @@ func (c *Client) noder(ctx context.Context, table string, id types.ID) (Noder, e
 		}
 		query := c.Task.Query().
 			Where(task.ID(uid))
-		query, err := query.CollectFields(ctx, "Task")
+		query, err := query.CollectFields(ctx, taskImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +138,7 @@ func (c *Client) noder(ctx context.Context, table string, id types.ID) (Noder, e
 		}
 		query := c.Todo.Query().
 			Where(todo.ID(uid))
-		query, err := query.CollectFields(ctx, "Todo")
+		query, err := query.CollectFields(ctx, todoImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +154,7 @@ func (c *Client) noder(ctx context.Context, table string, id types.ID) (Noder, e
 		}
 		query := c.User.Query().
 			Where(user.ID(uid))
-		query, err := query.CollectFields(ctx, "User")
+		query, err := query.CollectFields(ctx, userImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -208,10 +236,26 @@ func (c *Client) noders(ctx context.Context, table string, ids []types.ID) ([]No
 		idmap[id] = append(idmap[id], &noders[i])
 	}
 	switch table {
+	case remote.Table:
+		query := c.Remote.Query().
+			Where(remote.IDIn(ids...))
+		query, err := query.CollectFields(ctx, remoteImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
 	case task.Table:
 		query := c.Task.Query().
 			Where(task.IDIn(ids...))
-		query, err := query.CollectFields(ctx, "Task")
+		query, err := query.CollectFields(ctx, taskImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +271,7 @@ func (c *Client) noders(ctx context.Context, table string, ids []types.ID) ([]No
 	case todo.Table:
 		query := c.Todo.Query().
 			Where(todo.IDIn(ids...))
-		query, err := query.CollectFields(ctx, "Todo")
+		query, err := query.CollectFields(ctx, todoImplementors...)
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +287,7 @@ func (c *Client) noders(ctx context.Context, table string, ids []types.ID) ([]No
 	case user.Table:
 		query := c.User.Query().
 			Where(user.IDIn(ids...))
-		query, err := query.CollectFields(ctx, "User")
+		query, err := query.CollectFields(ctx, userImplementors...)
 		if err != nil {
 			return nil, err
 		}

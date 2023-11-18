@@ -9,6 +9,17 @@ import (
 )
 
 var (
+	// RemotesColumns holds the columns for the "remotes" table.
+	RemotesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "data", Type: field.TypeString},
+	}
+	// RemotesTable holds the schema information for the "remotes" table.
+	RemotesTable = &schema.Table{
+		Name:       "remotes",
+		Columns:    RemotesColumns,
+		PrimaryKey: []*schema.Column{RemotesColumns[0]},
+	}
 	// TaskColumns holds the columns for the "task" table.
 	TaskColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -113,6 +124,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		RemotesTable,
 		TaskTable,
 		TodoTable,
 		UserTable,

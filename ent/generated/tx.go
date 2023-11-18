@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Remote is the client for interacting with the Remote builders.
+	Remote *RemoteClient
 	// Task is the client for interacting with the Task builders.
 	Task *TaskClient
 	// Todo is the client for interacting with the Todo builders.
@@ -149,6 +151,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Remote = NewRemoteClient(tx.config)
 	tx.Task = NewTaskClient(tx.config)
 	tx.Todo = NewTodoClient(tx.config)
 	tx.User = NewUserClient(tx.config)
@@ -161,7 +164,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Task.QueryXXX(), the query will be executed
+// applies a query, for example: Remote.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

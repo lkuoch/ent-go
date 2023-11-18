@@ -35,6 +35,14 @@ func (tu *TaskUpdate) SetTitle(s string) *TaskUpdate {
 	return tu
 }
 
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (tu *TaskUpdate) SetNillableTitle(s *string) *TaskUpdate {
+	if s != nil {
+		tu.SetTitle(*s)
+	}
+	return tu
+}
+
 // SetItemStatus sets the "item_status" field.
 func (tu *TaskUpdate) SetItemStatus(ts types.ItemStatus) *TaskUpdate {
 	tu.mutation.SetItemStatus(ts)
@@ -186,6 +194,14 @@ type TaskUpdateOne struct {
 // SetTitle sets the "title" field.
 func (tuo *TaskUpdateOne) SetTitle(s string) *TaskUpdateOne {
 	tuo.mutation.SetTitle(s)
+	return tuo
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (tuo *TaskUpdateOne) SetNillableTitle(s *string) *TaskUpdateOne {
+	if s != nil {
+		tuo.SetTitle(*s)
+	}
 	return tuo
 }
 

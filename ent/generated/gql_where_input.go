@@ -6,12 +6,191 @@ import (
 	"errors"
 	"fmt"
 	"lkuoch/ent-todo/ent/generated/predicate"
+	"lkuoch/ent-todo/ent/generated/remote"
 	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
 	"lkuoch/ent-todo/ent/schema/types"
 	"time"
 )
+
+// RemoteWhereInput represents a where input for filtering Remote queries.
+type RemoteWhereInput struct {
+	Predicates []predicate.Remote  `json:"-"`
+	Not        *RemoteWhereInput   `json:"not,omitempty"`
+	Or         []*RemoteWhereInput `json:"or,omitempty"`
+	And        []*RemoteWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *types.ID  `json:"id,omitempty"`
+	IDNEQ   *types.ID  `json:"idNEQ,omitempty"`
+	IDIn    []types.ID `json:"idIn,omitempty"`
+	IDNotIn []types.ID `json:"idNotIn,omitempty"`
+	IDGT    *types.ID  `json:"idGT,omitempty"`
+	IDGTE   *types.ID  `json:"idGTE,omitempty"`
+	IDLT    *types.ID  `json:"idLT,omitempty"`
+	IDLTE   *types.ID  `json:"idLTE,omitempty"`
+
+	// "data" field predicates.
+	Data             *string  `json:"data,omitempty"`
+	DataNEQ          *string  `json:"dataNEQ,omitempty"`
+	DataIn           []string `json:"dataIn,omitempty"`
+	DataNotIn        []string `json:"dataNotIn,omitempty"`
+	DataGT           *string  `json:"dataGT,omitempty"`
+	DataGTE          *string  `json:"dataGTE,omitempty"`
+	DataLT           *string  `json:"dataLT,omitempty"`
+	DataLTE          *string  `json:"dataLTE,omitempty"`
+	DataContains     *string  `json:"dataContains,omitempty"`
+	DataHasPrefix    *string  `json:"dataHasPrefix,omitempty"`
+	DataHasSuffix    *string  `json:"dataHasSuffix,omitempty"`
+	DataEqualFold    *string  `json:"dataEqualFold,omitempty"`
+	DataContainsFold *string  `json:"dataContainsFold,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *RemoteWhereInput) AddPredicates(predicates ...predicate.Remote) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the RemoteWhereInput filter on the RemoteQuery builder.
+func (i *RemoteWhereInput) Filter(q *RemoteQuery) (*RemoteQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyRemoteWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyRemoteWhereInput is returned in case the RemoteWhereInput is empty.
+var ErrEmptyRemoteWhereInput = errors.New("generated: empty predicate RemoteWhereInput")
+
+// P returns a predicate for filtering remotes.
+// An error is returned if the input is empty or invalid.
+func (i *RemoteWhereInput) P() (predicate.Remote, error) {
+	var predicates []predicate.Remote
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, remote.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Remote, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, remote.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Remote, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, remote.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, remote.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, remote.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, remote.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, remote.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, remote.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, remote.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, remote.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, remote.IDLTE(*i.IDLTE))
+	}
+	if i.Data != nil {
+		predicates = append(predicates, remote.DataEQ(*i.Data))
+	}
+	if i.DataNEQ != nil {
+		predicates = append(predicates, remote.DataNEQ(*i.DataNEQ))
+	}
+	if len(i.DataIn) > 0 {
+		predicates = append(predicates, remote.DataIn(i.DataIn...))
+	}
+	if len(i.DataNotIn) > 0 {
+		predicates = append(predicates, remote.DataNotIn(i.DataNotIn...))
+	}
+	if i.DataGT != nil {
+		predicates = append(predicates, remote.DataGT(*i.DataGT))
+	}
+	if i.DataGTE != nil {
+		predicates = append(predicates, remote.DataGTE(*i.DataGTE))
+	}
+	if i.DataLT != nil {
+		predicates = append(predicates, remote.DataLT(*i.DataLT))
+	}
+	if i.DataLTE != nil {
+		predicates = append(predicates, remote.DataLTE(*i.DataLTE))
+	}
+	if i.DataContains != nil {
+		predicates = append(predicates, remote.DataContains(*i.DataContains))
+	}
+	if i.DataHasPrefix != nil {
+		predicates = append(predicates, remote.DataHasPrefix(*i.DataHasPrefix))
+	}
+	if i.DataHasSuffix != nil {
+		predicates = append(predicates, remote.DataHasSuffix(*i.DataHasSuffix))
+	}
+	if i.DataEqualFold != nil {
+		predicates = append(predicates, remote.DataEqualFold(*i.DataEqualFold))
+	}
+	if i.DataContainsFold != nil {
+		predicates = append(predicates, remote.DataContainsFold(*i.DataContainsFold))
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyRemoteWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return remote.And(predicates...), nil
+	}
+}
 
 // TaskWhereInput represents a where input for filtering Task queries.
 type TaskWhereInput struct {

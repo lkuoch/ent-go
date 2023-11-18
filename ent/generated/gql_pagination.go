@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"lkuoch/ent-todo/ent/generated/remote"
 	"lkuoch/ent-todo/ent/generated/task"
 	"lkuoch/ent-todo/ent/generated/todo"
 	"lkuoch/ent-todo/ent/generated/user"
@@ -99,6 +100,254 @@ func paginateLimit(first, last *int) int {
 		limit = *last + 1
 	}
 	return limit
+}
+
+// RemoteEdge is the edge representation of Remote.
+type RemoteEdge struct {
+	Node   *Remote `json:"node"`
+	Cursor Cursor  `json:"cursor"`
+}
+
+// RemoteConnection is the connection containing edges to Remote.
+type RemoteConnection struct {
+	Edges      []*RemoteEdge `json:"edges"`
+	PageInfo   PageInfo      `json:"pageInfo"`
+	TotalCount int           `json:"totalCount"`
+}
+
+func (c *RemoteConnection) build(nodes []*Remote, pager *remotePager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *Remote
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Remote {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Remote {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*RemoteEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &RemoteEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// RemotePaginateOption enables pagination customization.
+type RemotePaginateOption func(*remotePager) error
+
+// WithRemoteOrder configures pagination ordering.
+func WithRemoteOrder(order *RemoteOrder) RemotePaginateOption {
+	if order == nil {
+		order = DefaultRemoteOrder
+	}
+	o := *order
+	return func(pager *remotePager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultRemoteOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithRemoteFilter configures pagination filter.
+func WithRemoteFilter(filter func(*RemoteQuery) (*RemoteQuery, error)) RemotePaginateOption {
+	return func(pager *remotePager) error {
+		if filter == nil {
+			return errors.New("RemoteQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type remotePager struct {
+	reverse bool
+	order   *RemoteOrder
+	filter  func(*RemoteQuery) (*RemoteQuery, error)
+}
+
+func newRemotePager(opts []RemotePaginateOption, reverse bool) (*remotePager, error) {
+	pager := &remotePager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultRemoteOrder
+	}
+	return pager, nil
+}
+
+func (p *remotePager) applyFilter(query *RemoteQuery) (*RemoteQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *remotePager) toCursor(r *Remote) Cursor {
+	return p.order.Field.toCursor(r)
+}
+
+func (p *remotePager) applyCursors(query *RemoteQuery, after, before *Cursor) (*RemoteQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultRemoteOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *remotePager) applyOrder(query *RemoteQuery) *RemoteQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultRemoteOrder.Field {
+		query = query.Order(DefaultRemoteOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *remotePager) orderExpr(query *RemoteQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultRemoteOrder.Field {
+			b.Comma().Ident(DefaultRemoteOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Remote.
+func (r *RemoteQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...RemotePaginateOption,
+) (*RemoteConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newRemotePager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if r, err = pager.applyFilter(r); err != nil {
+		return nil, err
+	}
+	conn := &RemoteConnection{Edges: []*RemoteEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := r.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if r, err = pager.applyCursors(r, after, before); err != nil {
+		return nil, err
+	}
+	if limit := paginateLimit(first, last); limit != 0 {
+		r.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := r.collectField(ctx, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	r = pager.applyOrder(r)
+	nodes, err := r.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+// RemoteOrderField defines the ordering field of Remote.
+type RemoteOrderField struct {
+	// Value extracts the ordering value from the given Remote.
+	Value    func(*Remote) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) remote.OrderOption
+	toCursor func(*Remote) Cursor
+}
+
+// RemoteOrder defines the ordering of Remote.
+type RemoteOrder struct {
+	Direction OrderDirection    `json:"direction"`
+	Field     *RemoteOrderField `json:"field"`
+}
+
+// DefaultRemoteOrder is the default ordering of Remote.
+var DefaultRemoteOrder = &RemoteOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &RemoteOrderField{
+		Value: func(r *Remote) (ent.Value, error) {
+			return r.ID, nil
+		},
+		column: remote.FieldID,
+		toTerm: remote.ByID,
+		toCursor: func(r *Remote) Cursor {
+			return Cursor{ID: r.ID}
+		},
+	},
+}
+
+// ToEdge converts Remote into RemoteEdge.
+func (r *Remote) ToEdge(order *RemoteOrder) *RemoteEdge {
+	if order == nil {
+		order = DefaultRemoteOrder
+	}
+	return &RemoteEdge{
+		Node:   r,
+		Cursor: order.Field.toCursor(r),
+	}
 }
 
 // TaskEdge is the edge representation of Task.
@@ -209,8 +458,8 @@ func (p *taskPager) applyFilter(query *TaskQuery) (*TaskQuery, error) {
 
 func (p *taskPager) toCursor(t *Task) Cursor {
 	cs := make([]any, 0, len(p.order))
-	for _, o := range p.order {
-		cs = append(cs, o.Field.toCursor(t).Value)
+	for _, po := range p.order {
+		cs = append(cs, po.Field.toCursor(t).Value)
 	}
 	return Cursor{ID: t.ID, Value: cs}
 }
@@ -312,7 +561,9 @@ func (t *TaskQuery) Paginate(
 	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
 		hasPagination := after != nil || first != nil || before != nil || last != nil
 		if hasPagination || ignoredEdges {
-			if conn.TotalCount, err = t.Clone().Count(ctx); err != nil {
+			c := t.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
 				return nil, err
 			}
 			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
@@ -556,8 +807,8 @@ func (p *todoPager) applyFilter(query *TodoQuery) (*TodoQuery, error) {
 
 func (p *todoPager) toCursor(t *Todo) Cursor {
 	cs := make([]any, 0, len(p.order))
-	for _, o := range p.order {
-		cs = append(cs, o.Field.toCursor(t).Value)
+	for _, po := range p.order {
+		cs = append(cs, po.Field.toCursor(t).Value)
 	}
 	return Cursor{ID: t.ID, Value: cs}
 }
@@ -659,7 +910,9 @@ func (t *TodoQuery) Paginate(
 	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
 		hasPagination := after != nil || first != nil || before != nil || last != nil
 		if hasPagination || ignoredEdges {
-			if conn.TotalCount, err = t.Clone().Count(ctx); err != nil {
+			c := t.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
 				return nil, err
 			}
 			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
@@ -939,8 +1192,8 @@ func (p *userPager) applyFilter(query *UserQuery) (*UserQuery, error) {
 
 func (p *userPager) toCursor(u *User) Cursor {
 	cs := make([]any, 0, len(p.order))
-	for _, o := range p.order {
-		cs = append(cs, o.Field.toCursor(u).Value)
+	for _, po := range p.order {
+		cs = append(cs, po.Field.toCursor(u).Value)
 	}
 	return Cursor{ID: u.ID, Value: cs}
 }
@@ -1042,7 +1295,9 @@ func (u *UserQuery) Paginate(
 	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
 		hasPagination := after != nil || first != nil || before != nil || last != nil
 		if hasPagination || ignoredEdges {
-			if conn.TotalCount, err = u.Clone().Count(ctx); err != nil {
+			c := u.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
 				return nil, err
 			}
 			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0

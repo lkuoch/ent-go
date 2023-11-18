@@ -43,9 +43,25 @@ func (tu *TodoUpdate) SetTitle(s string) *TodoUpdate {
 	return tu
 }
 
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (tu *TodoUpdate) SetNillableTitle(s *string) *TodoUpdate {
+	if s != nil {
+		tu.SetTitle(*s)
+	}
+	return tu
+}
+
 // SetBody sets the "body" field.
 func (tu *TodoUpdate) SetBody(s string) *TodoUpdate {
 	tu.mutation.SetBody(s)
+	return tu
+}
+
+// SetNillableBody sets the "body" field if the given value is not nil.
+func (tu *TodoUpdate) SetNillableBody(s *string) *TodoUpdate {
+	if s != nil {
+		tu.SetBody(*s)
+	}
 	return tu
 }
 
@@ -353,9 +369,25 @@ func (tuo *TodoUpdateOne) SetTitle(s string) *TodoUpdateOne {
 	return tuo
 }
 
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (tuo *TodoUpdateOne) SetNillableTitle(s *string) *TodoUpdateOne {
+	if s != nil {
+		tuo.SetTitle(*s)
+	}
+	return tuo
+}
+
 // SetBody sets the "body" field.
 func (tuo *TodoUpdateOne) SetBody(s string) *TodoUpdateOne {
 	tuo.mutation.SetBody(s)
+	return tuo
+}
+
+// SetNillableBody sets the "body" field if the given value is not nil.
+func (tuo *TodoUpdateOne) SetNillableBody(s *string) *TodoUpdateOne {
+	if s != nil {
+		tuo.SetBody(*s)
+	}
 	return tuo
 }
 
