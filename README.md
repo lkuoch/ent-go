@@ -70,5 +70,13 @@ erDiagram
 - [x] Setup relations
 - [x] Setup more tables
 - [x] Setup more operations
+- [ ] Setup remote schemas with gRPC
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy
+- [ ] Setup relay UI
+
+## Stretch
+- [ ] Schema diffs
+- [ ] CI/CD pipeline
+- [ ] Switch to postgres
+- [ ] Mono-repo support
