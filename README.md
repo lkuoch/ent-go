@@ -14,13 +14,13 @@
    - Spins up graphql server
 
 ## Notes/Pre-requisites:
-`ent-go` is extremely not stable
+`ent-go` is extremely not stable and very annoying to use
 
 Install the following for grpc
 - `brew install protobuf`
 - `go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28`
 - `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2`
-- `go get entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc`
+- `go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@latest`
 
 Need to use the following packages
 - `go get -u entgo.io/contrib@master`
