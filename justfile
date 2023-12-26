@@ -1,7 +1,10 @@
 # This is a justfile. See https://github.com/casey/just
 
 up:
-  docker-compose build && docker-compose up
+  podman compose up --build -d
+
+down:
+  podman compose down
 
 list:
   just --list
@@ -19,23 +22,23 @@ migrate-create:
   atlas migrate diff migration_name \
     --dir "file://ent/migrate/migrations" \
     --to "ent://ent/schema" \
-    --dev-url "sqlite://file?mode=memory&_fk=1"
+    --dev-url "postgres://user:password@localhost:5432/ent?search_path=public&sslmode=disable"
 
 migrate-apply:
   atlas migrate apply \
     --dir "file://ent/migrate/migrations" \
-    --url "sqlite://test-db.db?_fk=1"
+    --url "postgres://user:password@localhost:5432/ent?search_path=public&sslmode=disable"
 
 migrate-status:
   atlas migrate status \
     --dir "file://ent/migrate/migrations" \
-    --url "sqlite://test-db.db?_fk=1"
+    --url "postgres://user:password@localhost:5432/ent?search_path=public&sslmode=disable"
 
 migrate-diff:
   atlas migrate diff migration_name \
     --dir "file://ent/migrate/migrations" \
     --to "ent://ent/schema" \
-    --dev-url "sqlite://test-db?mode=memory&_fk=1"
+    --dev-url "postgres://user:password@localhost:5432/ent?search_path=public&sslmode=disable"
 
 migrate-run:
   just migrate-create && just migrate-apply && just migrate-status

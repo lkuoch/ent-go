@@ -1,5 +1,8 @@
 root = "."
 tmp_dir = ".tmp"
+
+watch_dir = ["service/", "proto/", "ent/proto", "ent/resolvers", "ent/schema"]
+
 [build]
-	cmd = "go generate . && go build service/server.go"
-	bin = ".tmp/ent-todo"
+	cmd = "just regenerate && just build"
+	bin = "server"

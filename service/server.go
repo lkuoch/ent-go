@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	ent "lkuoch/ent-todo/ent/generated"
 	gql "lkuoch/ent-todo/ent/resolvers"
@@ -13,12 +15,30 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
+
+func getConnectionString() string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	host := os.Getenv("POSTGRES_HOST")
+	port := os.Getenv("POSTGRES_PORT")
+	user := os.Getenv("POSTGRES_USER")
+	dbname := os.Getenv("POSTGRES_DB")
+	password := os.Getenv("POSTGRES_PASSWORD")
+
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", host, port, user, dbname, password)
+
+	return connectionString
+}
 
 func main() {
 	// Create ent.Client and run the schema migration.
-	client, err := ent.Open(dialect.SQLite, "test-db.db?_fk=1")
+	client, err := ent.Open(dialect.Postgres, getConnectionString())
 	if err != nil {
 		log.Fatal("opening ent client", err)
 	}

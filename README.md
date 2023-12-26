@@ -88,7 +88,7 @@ erDiagram
 - [x] Setup relations
 - [x] Setup more tables
 - [x] Setup more operations
-- [ ] Switch to docker + postgres
+- [x] Switch to docker + postgres
 - [ ] Setup remote schemas with gRPC
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy
