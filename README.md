@@ -14,20 +14,23 @@
    - Spins up graphql server
 
 ## Notes/Pre-requisites:
+
 `ent-go` is extremely not stable and very annoying to use
 
 Install the following for grpc
+
 - `brew install protobuf`
 - `go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28`
 - `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2`
 - `go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@latest`
 
 Need to use the following packages
+
 - `go get -u entgo.io/contrib@master`
 - `go get -u entgo.io/ent@master`
 
-
 ## Arch
+
 ```mermaid
 erDiagram
     USER ||--o{ TODO : has
@@ -79,18 +82,20 @@ erDiagram
 ```
 
 ## Tasks
+
 - [x] Setup migrations
 - [x] Setup Relay Node Interface
 - [x] Setup relations
 - [x] Setup more tables
 - [x] Setup more operations
+- [ ] Switch to docker + postgres
 - [ ] Setup remote schemas with gRPC
 - [ ] Setup permissions
 - [ ] Setup multi-tenancy
 - [ ] Setup relay UI
 
 ## Stretch
+
 - [ ] Schema diffs
 - [ ] CI/CD pipeline
-- [ ] Switch to postgres
 - [ ] Mono-repo support

@@ -10,3 +10,7 @@ services:
       - "8081:8081"
     volumes:
       - ./:/app
+      - go-build:/go/pkg/mod
+
+volumes:
+  go-build:

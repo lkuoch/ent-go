@@ -1,16 +1,16 @@
-FROM golang:1.20.3-bullseye
+FROM golang:1.21-alpine
 
 WORKDIR /app
 
 # Cache dependencies
-COPY go.mod go.sum .
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Pull in rest
 COPY . .
 
-# Codegen
-RUN go generate .
+# Get filewatching going
+RUN go install github.com/cosmtrek/air@latest
 
-# Run app
-CMD ["go", "run", "service/ent-todo.go"]
+EXPOSE 8081
+CMD ["air"]

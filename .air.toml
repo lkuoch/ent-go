@@ -1,0 +1,5 @@
+root = "."
+tmp_dir = ".tmp"
+[build]
+	cmd = "go generate . && go build service/server.go"
+	bin = ".tmp/ent-todo"
